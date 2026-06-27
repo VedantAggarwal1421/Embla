@@ -25,4 +25,9 @@ module imem (
             data_valid <= 1'b0;
         end
     end
+
+    initial begin
+        // Load instructions from a file into the instruction memory
+        $readmemh("tests/program.hex", memory);
+    end
 endmodule

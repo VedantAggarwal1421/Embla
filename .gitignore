@@ -1,7 +1,1 @@
-.cpp
-.h
-.d
-.mk
-.dat
-.a
-.o
+obj_dir

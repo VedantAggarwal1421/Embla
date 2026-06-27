@@ -8,15 +8,13 @@ module instructionFetch (
     input  logic        if_data_valid, // Instruction fetch data valid
 
     output logic [31:0] instruction,
+    output logic [31:0] instruction_pc,
     output logic        instruction_valid  // Signal indicating instruction is valid
 );
 
-    logic pc_update;
-    logic [31:0] pc_in;
-    logic [31:0] pc_out;
+    logic [31:0] pc;
 
-    assign pc_in   = pc_out + 32'd4;
-    assign if_addr = pc_out;
+    assign if_addr = pc;  // Assign the current PC to the instruction fetch address
 
     typedef enum logic [0:0] {
         IF_REQ,
@@ -26,18 +24,19 @@ module instructionFetch (
     if_state_t if_state;
 
     always_ff @(posedge clk or posedge rst) begin
+        //$display("Instruction Fetch State: %0d, Time: %0t", if_state, $time);
         if (rst) begin
             if_state          <= IF_REQ;
-            pc_update         <= 1'b0;
-            if_req_valid      <= 1'b0;
+            if_req_valid      <= 1'b1;
+            pc                <= 32'b0;  // Reset PC to 0 on reset
             instruction       <= 32'b0;
+            instruction_pc    <= 32'b0;
             instruction_valid <= 1'b0;
         end else begin
-            pc_update <= 1'b0;  // Default to no PC update
             instruction_valid <= 1'b0;  // Default to instruction not valid
             case (if_state)
                 IF_REQ: begin
-                    //if_req_valid <= 1'b1;  // Request instruction fetch
+                    if_req_valid <= 1'b1;  // Request instruction fetch
                     if_state <= IF_WAIT;
                 end
                 IF_WAIT: begin
@@ -45,8 +44,9 @@ module instructionFetch (
                     if (if_data_valid) begin
                         instruction       <= if_data;  //Latch instruction data
                         instruction_valid <= 1'b1;  //Assert valid
-                        pc_update         <= 1'b1;  //Update PC
-                        if_req_valid      <= 1'b1;  // Request next instruction fetch
+                        instruction_pc    <= pc;  //Latch PC
+                        pc                <= pc + 32'd4;  //Update PC
+                        if_req_valid      <= 1'b1;
                         if_state          <= IF_REQ;
                     end else begin
                         if_state <= IF_WAIT;  // Stay in wait state until data is valid
@@ -56,12 +56,6 @@ module instructionFetch (
         end
     end
 
-    pc pc_inst (
-        .clk(clk),
-        .rst(rst),
-        .pc_update(pc_update),
-        .pc_in(pc_in),
-        .pc_out(pc_out)
-    );
+
 
 endmodule

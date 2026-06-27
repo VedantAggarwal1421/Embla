@@ -18,6 +18,7 @@ module core (
     // Instruction Fetch(F) -> Instruction Decode(D) -> Execute(E) -> Memory Access(M) -> Write Back(W)
 
     logic [31:0] instruction;
+    logic [31:0] instruction_pc;
     logic        instruction_valid;
 
     instructionFetch if_inst (
@@ -28,6 +29,7 @@ module core (
         .if_data(if_data),
         .if_data_valid(if_data_valid),
         .instruction(instruction),
+        .instruction_pc(instruction_pc),
         .instruction_valid(instruction_valid)
     );
 
@@ -42,7 +44,7 @@ module core (
         end else if (instruction_valid == 1'b1) begin
             if_id_instruction       <= instruction;
             if_id_instruction_valid <= 1'b1;
-            $display("Instruction : %h, Time: %0t", instruction, $time);
+            $display("Instruction : %h, PC: %h, Time: %0t", instruction, instruction_pc, $time);
         end
     end
 
