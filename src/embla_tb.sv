@@ -1,0 +1,36 @@
+`timescale 1ns / 1ns
+
+module embla_tb;
+    logic clk;
+    logic rst;
+    logic uart_tx;
+    logic uart_rx;
+
+    initial begin
+        clk = 0;
+        rst = 0;
+        uart_tx = 1;
+        uart_rx = 1;
+        forever #5 clk = ~clk;
+    end
+
+    embla DUT (
+        .clk(clk),
+        .rst(rst),
+        .uart_tx(uart_tx),
+        .uart_rx(uart_rx)
+    );
+
+    initial begin
+        // Reset the system
+        rst = 1;
+        #20;
+        rst = 0;
+
+        // Wait for some time to observe the behavior
+        #1000;
+
+        // Finish the simulation
+        $finish;
+    end
+endmodule
