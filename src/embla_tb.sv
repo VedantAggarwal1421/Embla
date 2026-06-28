@@ -28,7 +28,7 @@ module embla_tb;
         rst = 0;
 
         // Wait for some time to observe the behavior
-        #1000;
+        #200;
 
         // Finish the simulation
         $finish;

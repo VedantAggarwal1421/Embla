@@ -1,11 +1,12 @@
-module instructionFetch (
+module instruction_fetch (
     input  logic        clk,
     input  logic        rst,
     //Instruction Fetch Signals
-    output logic [31:0] if_addr,       // Instruction fetch address
-    output logic        if_req_valid,  // Fetch request valid
-    input  logic [31:0] if_data,       // Instruction fetch data
-    input  logic        if_data_valid, // Instruction fetch data valid
+    output logic [31:0] if_addr,        // Instruction fetch address
+    output logic        if_req_valid,   // Fetch request valid
+    input  logic [31:0] if_data,        // Instruction fetch data
+    input  logic        if_data_valid,  // Instruction fetch data valid
+    input  logic        if_stall,
 
     output logic [31:0] instruction,
     output logic [31:0] instruction_pc,
@@ -13,49 +14,32 @@ module instructionFetch (
 );
 
     logic [31:0] pc;
+    logic [31:0] old_pc;
 
-    assign if_addr = pc;  // Assign the current PC to the instruction fetch address
-
-    typedef enum logic [0:0] {
-        IF_REQ,
-        IF_WAIT
-    } if_state_t;
-
-    if_state_t if_state;
+    assign if_addr = pc;
+    assign if_req_valid = ~if_stall;  // Always request instructions. Will add stall logic later.
 
     always_ff @(posedge clk or posedge rst) begin
-        //$display("Instruction Fetch State: %0d, Time: %0t", if_state, $time);
         if (rst) begin
-            if_state          <= IF_REQ;
-            if_req_valid      <= 1'b1;
-            pc                <= 32'b0;  // Reset PC to 0 on reset
-            instruction       <= 32'b0;
-            instruction_pc    <= 32'b0;
-            instruction_valid <= 1'b0;
-        end else begin
-            instruction_valid <= 1'b0;  // Default to instruction not valid
-            case (if_state)
-                IF_REQ: begin
-                    if_req_valid <= 1'b1;  // Request instruction fetch
-                    if_state <= IF_WAIT;
-                end
-                IF_WAIT: begin
-                    if_req_valid <= 1'b0;
-                    if (if_data_valid) begin
-                        instruction       <= if_data;  //Latch instruction data
-                        instruction_valid <= 1'b1;  //Assert valid
-                        instruction_pc    <= pc;  //Latch PC
-                        pc                <= pc + 32'd4;  //Update PC
-                        if_req_valid      <= 1'b1;
-                        if_state          <= IF_REQ;
-                    end else begin
-                        if_state <= IF_WAIT;  // Stay in wait state until data is valid
-                    end
-                end
-            endcase
+            pc <= 32'b0;
+            old_pc <= 32'b0;
+        end else if (if_req_valid) begin
+            pc <= pc + 4;  // Increment PC by 4 for next instruction
+            old_pc <= pc;  // Store the current PC
         end
     end
 
-
+    always_ff @(posedge clk or posedge rst) begin
+        instruction_valid <= 1'b0;  // Default to not valid
+        if (rst) begin
+            instruction <= 32'b0;
+            instruction_pc <= 32'b0;
+            instruction_valid <= 1'b0;
+        end else begin
+            instruction <= if_data;
+            instruction_pc <= old_pc;  // Use the stored PC for the current instruction
+            instruction_valid <= if_data_valid;
+        end
+    end
 
 endmodule

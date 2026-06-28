@@ -11,6 +11,7 @@ module embla (
     logic        if_req_valid;
     logic [31:0] if_data;
     logic        if_data_valid;
+    logic        if_stall;
 
     logic [31:0] dm_addr;
     logic [31:0] dm_wdata;
@@ -27,6 +28,7 @@ module embla (
         .if_req_valid(if_req_valid),
         .if_data(if_data),
         .if_data_valid(if_data_valid),
+        .if_stall(if_stall),
 
         //Data Memory Interface
         .dm_addr(dm_addr),
@@ -42,6 +44,7 @@ module embla (
         .addr(if_addr),
         .req_valid(if_req_valid),
         .data(if_data),
-        .data_valid(if_data_valid)
+        .data_valid(if_data_valid),
+        .stall(if_stall)
     );
 endmodule
