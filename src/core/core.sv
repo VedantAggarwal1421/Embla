@@ -1,4 +1,5 @@
 //Top level module for the RV32IMA Core. Interfaces with memory systems.
+import riscv::*;
 
 module core (
     input         clk,
@@ -18,9 +19,8 @@ module core (
 );
     // Instruction Fetch(F) -> Instruction Decode(D) -> Execute(E) -> Memory Access(M) -> Write Back(W)
 
-    logic [31:0] if_instruction;
-    logic [31:0] if_instruction_pc;
-    logic        if_instruction_valid;
+    if_id_t if_id_d;
+    if_id_t if_id_q;
 
     instruction_fetch if_inst (
         .clk(clk),
@@ -30,28 +30,19 @@ module core (
         .if_data(if_data),
         .if_data_valid(if_data_valid),
         .if_stall(if_stall),
-        .instruction(if_instruction),
-        .instruction_pc(if_instruction_pc),
-        .instruction_valid(if_instruction_valid)
+        .instruction(if_id_d.instruction),
+        .instruction_pc(if_id_d.pc),
+        .instruction_valid(if_id_d.valid)
     );
-
-    logic [31:0] if_id_instruction;
-    logic [31:0] if_id_instruction_pc;
-    logic        if_id_instruction_valid;
 
     //IF/ID Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
-        if_id_instruction_valid <= 1'b0;  // Default to not valid
+        if_id_q.valid <= 1'b0;  // Default to not valid
         if (rst) begin
-            if_id_instruction       <= 32'b0;
-            if_id_instruction_pc    <= 32'b0;
-            if_id_instruction_valid <= 1'b0;
-        end else if (if_instruction_valid == 1'b1) begin
-            if_id_instruction       <= if_instruction;
-            if_id_instruction_pc    <= if_instruction_pc;
-            if_id_instruction_valid <= if_instruction_valid;
-            $display("Instruction : %h, PC: %h, Time: %0t", if_instruction, if_instruction_pc,
-                     $time);
+            if_id_q <= '0;
+        end else if (if_id_d.valid == 1'b1) begin
+            if_id_q <= if_id_d;
+            $display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
         end
     end
 
@@ -60,9 +51,5 @@ module core (
     logic [31:0] id_instruction;
     logic [31:0] id_instruction_pc;
     logic        id_instruction_valid;
-
-    assign id_instruction = if_id_instruction;
-    assign id_instruction_pc = if_id_instruction_pc;
-    assign id_instruction_valid = if_id_instruction_valid;
 
 endmodule

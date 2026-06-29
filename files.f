@@ -2,6 +2,7 @@
 
 src/embla.sv
 src/embla_tb.sv
+src/package/riscv.sv
 src/core/core.sv
 src/core/IF.sv
 src/memory/imem.sv
