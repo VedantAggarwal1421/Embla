@@ -2,7 +2,10 @@
 
 src/embla.sv
 src/embla_tb.sv
-src/package/riscv.sv
+src/package/core_pkg.sv
 src/core/core.sv
 src/core/IF.sv
+src/core/control.sv
+src/core/ID.sv
+src/core/regfile.sv
 src/memory/imem.sv

@@ -1,5 +1,5 @@
 //Top level module for the RV32IMA Core. Interfaces with memory systems.
-import riscv::*;
+import core_pkg::*;
 
 module core (
     input         clk,
@@ -18,7 +18,7 @@ module core (
     input  [31:0] dm_rdata        // Data memory read data
 );
     // Instruction Fetch(F) -> Instruction Decode(D) -> Execute(E) -> Memory Access(M) -> Write Back(W)
-
+    //verilog_format: off
     if_id_t if_id_d;
     if_id_t if_id_q;
 
@@ -42,14 +42,32 @@ module core (
             if_id_q <= '0;
         end else if (if_id_d.valid == 1'b1) begin
             if_id_q <= if_id_d;
-            $display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
+            //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
         end
     end
 
     //Instruction Decode
 
-    logic [31:0] id_instruction;
-    logic [31:0] id_instruction_pc;
-    logic        id_instruction_valid;
+    id_ex_t id_ex_d;
+    id_ex_t id_ex_q;
 
+    instruction_decode id_inst(
+        .clk(clk), 
+        .rst(rst), 
+        .if_id(if_id_q), 
+        .rd_data(32'b0),
+        .rd_addr(5'b0),
+        .rd_we(1'b0), 
+        .id_ex_d(id_ex_d)
+    );
+
+    //ID/EX Pipeline register
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            id_ex_q <= '0;
+        end else begin
+            id_ex_q <= id_ex_d;
+            $display("Destination: %b, Time: %0t", id_ex_q.rd_addr, $time);
+        end
+    end
 endmodule
