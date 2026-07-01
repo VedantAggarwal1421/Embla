@@ -7,5 +7,7 @@ src/core/core.sv
 src/core/IF.sv
 src/core/control.sv
 src/core/ID.sv
+src/core/alu.sv
+src/core/EX.sv
 src/core/regfile.sv
 src/memory/imem.sv

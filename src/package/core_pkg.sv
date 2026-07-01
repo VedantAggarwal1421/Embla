@@ -27,6 +27,11 @@ package core_pkg;
         ALU_AND  = 4'b0111
     } alu_ctrl_t;
 
+    typedef enum logic {
+        ALUB_REGISTER,
+        ALUB_IMMEDIATE
+    } alu_srcb_t;
+
     //Immediates
     typedef enum logic [2:0] {
         IMM_I,
@@ -56,7 +61,9 @@ package core_pkg;
         logic reg_write;
         logic mem_write;
         alu_ctrl_t alu_ctrl;
+        alu_srcb_t alu_srcb;
         imm_type_t imm_type;
+
     } control_t;
 
     //Pipeline Registers
@@ -70,12 +77,26 @@ package core_pkg;
         //Data
         logic [31:0] rs1_data;
         logic [31:0] rs2_data;
-        logic [4:0] rd_addr;
         logic [31:0] immediate;
         //Control
         logic reg_write;
         logic mem_write;
         alu_ctrl_t alu_ctrl;
+        alu_srcb_t alu_srcb;
+        //Forwarding
+        logic [4:0] rs1_addr;
+        logic [4:0] rs2_addr;
+        logic [4:0] rd_addr;
     } id_ex_t;
+
+    typedef struct packed {
+        //Data
+        logic [31:0] alu_res;
+        //Control
+        logic reg_write;
+        logic mem_write;
+        //Forward
+        logic [4:0] rd_addr;
+    } ex_mem_t;
 
 endpackage

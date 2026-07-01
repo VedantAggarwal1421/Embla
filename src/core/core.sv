@@ -18,20 +18,20 @@ module core (
     input  [31:0] dm_rdata        // Data memory read data
 );
     // Instruction Fetch(F) -> Instruction Decode(D) -> Execute(E) -> Memory Access(M) -> Write Back(W)
-    //verilog_format: off
+
     if_id_t if_id_d;
     if_id_t if_id_q;
 
     instruction_fetch if_inst (
-        .clk(clk),
-        .rst(rst),
-        .if_addr(if_addr),
-        .if_req_valid(if_req_valid),
-        .if_data(if_data),
-        .if_data_valid(if_data_valid),
-        .if_stall(if_stall),
-        .instruction(if_id_d.instruction),
-        .instruction_pc(if_id_d.pc),
+        .clk              (clk),
+        .rst              (rst),
+        .if_addr          (if_addr),
+        .if_req_valid     (if_req_valid),
+        .if_data          (if_data),
+        .if_data_valid    (if_data_valid),
+        .if_stall         (if_stall),
+        .instruction      (if_id_d.instruction),
+        .instruction_pc   (if_id_d.pc),
         .instruction_valid(if_id_d.valid)
     );
 
@@ -51,23 +51,45 @@ module core (
     id_ex_t id_ex_d;
     id_ex_t id_ex_q;
 
-    instruction_decode id_inst(
-        .clk(clk), 
-        .rst(rst), 
-        .if_id(if_id_q), 
+    instruction_decode id_inst (
+        .clk    (clk),
+        .rst    (rst),
+        .if_id  (if_id_q),
         .rd_data(32'b0),
         .rd_addr(5'b0),
-        .rd_we(1'b0), 
+        .rd_we  (1'b0),
         .id_ex_d(id_ex_d)
     );
 
     //ID/EX Pipeline register
     always_ff @(posedge clk or posedge rst) begin
-        if(rst) begin
+        if (rst) begin
             id_ex_q <= '0;
         end else begin
             id_ex_q <= id_ex_d;
-            $display("Destination: %b, Time: %0t", id_ex_q.rd_addr, $time);
+            //$display("Destination: %b, Time: %0t", id_ex_q.rd_addr, $time);
+        end
+    end
+
+    //Execute Stage
+
+    ex_mem_t ex_mem_d;
+    ex_mem_t ex_mem_q;
+
+    execute execute_inst (
+        .clk     (clk),
+        .rst     (rst),
+        .id_ex   (id_ex_q),
+        .ex_mem_d(ex_mem_d)
+    );
+
+    //EX/MEM Pipeline Register
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            ex_mem_q <= '0;
+        end else begin
+            ex_mem_q <= ex_mem_d;
+            $display("ALU RESULT: %h, TIME: %0t", ex_mem_q.alu_res, $time);
         end
     end
 endmodule

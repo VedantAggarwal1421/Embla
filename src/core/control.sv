@@ -15,12 +15,15 @@ module controller (
         case (opcode)
             OPCODE_R: begin
                 ctrl.reg_write = 1;
+                ctrl.alu_srcb  = ALUB_REGISTER;
             end
             OPCODE_I: begin
                 ctrl.reg_write = 1;
+                ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
             OPCODE_S: begin
                 ctrl.mem_write = 1;
+                ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
             default: begin
                 ctrl.reg_write = 0;

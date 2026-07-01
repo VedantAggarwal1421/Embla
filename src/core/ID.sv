@@ -22,6 +22,9 @@ module instruction_decode (
 
     assign rs1_addr = if_id.instruction[19:15];
     assign rs2_addr = if_id.instruction[24:20];
+
+    assign id_ex_d.rs1_addr = rs1_addr;
+    assign id_ex_d.rs2_addr = rs2_addr;
     assign id_ex_d.rd_addr = if_id.instruction[11:7];
 
     register_file rf_inst (
@@ -57,5 +60,6 @@ module instruction_decode (
     assign id_ex_d.reg_write = ctrl.reg_write;
     assign id_ex_d.mem_write = ctrl.mem_write;
     assign id_ex_d.alu_ctrl  = ctrl.alu_ctrl;
+    assign id_ex_d.alu_srcb  = ctrl.alu_srcb;
 
 endmodule
