@@ -13,11 +13,14 @@ module embla (
     logic        if_data_valid;
     logic        if_stall;
 
-    logic [31:0] dm_addr;
-    logic [31:0] dm_wdata;
-    logic        dm_we;
-    logic [ 1:0] dm_size;
-    logic [31:0] dm_rdata;
+    logic [31:0] mem_addr;
+    logic        mem_req_valid;
+    logic [31:0] mem_wdata;
+    logic        mem_we;
+    logic [ 1:0] mem_size;
+    logic        mem_wdata_ready;
+    logic [31:0] mem_rdata;
+    logic        mem_rdata_ready;
 
     core core_inst (
         .clk(clk),
@@ -31,11 +34,14 @@ module embla (
         .if_stall(if_stall),
 
         //Data Memory Interface
-        .dm_addr(dm_addr),
-        .dm_wdata(dm_wdata),
-        .dm_we(dm_we),
-        .dm_size(dm_size),
-        .dm_rdata(dm_rdata)
+        .mem_addr(mem_addr),
+        .mem_req_valid(mem_req_valid),
+        .mem_wdata(mem_wdata),
+        .mem_we(mem_we),
+        .mem_size(mem_size),
+        .mem_wdata_ready(mem_wdata_ready),
+        .mem_rdata(mem_rdata),
+        .mem_rdata_ready(mem_rdata_ready)
     );
 
     imem imem_inst (
@@ -46,5 +52,18 @@ module embla (
         .data(if_data),
         .data_valid(if_data_valid),
         .stall(if_stall)
+    );
+
+    dmem dmem_inst (
+        .clk(clk),
+        .rst(rst),
+        .addr(mem_addr),
+        .req_valid(mem_req_valid),
+        .wdata(mem_wdata),
+        .we(mem_we),
+        .size(mem_size),
+        .wdata_ready(mem_wdata_ready),
+        .rdata(mem_rdata),
+        .rdata_ready(mem_rdata_ready)
     );
 endmodule

@@ -1,9 +1,3 @@
-addi x1, x0, 5
-slti x2, x0, 10
-sltiu x3, x0, 15
-xori x1, x0, 5
-ori x2, x0, 10
-andi x3, x0, 15
-slli x1, x0, 5
-srli x2, x0, 10
-srai x3, x0, 15
+lw x1, 0(x0)
+sw x0, 0(x0)
+lw x1, 0(x0)

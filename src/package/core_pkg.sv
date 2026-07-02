@@ -43,8 +43,8 @@ package core_pkg;
 
     //verilog_format: off
     function automatic logic [31:0] imm_decode(
-        input imm_type_t imm_type,
-        input logic [31:0] instruction
+        input imm_type_t    imm_type,
+        input logic [31:0]  instruction
     );
         imm_decode = '0;
         unique case (imm_type)
@@ -58,17 +58,26 @@ package core_pkg;
     //verilog_format: on
 
     typedef struct packed {
-        logic reg_write;
-        logic mem_write;
-        alu_ctrl_t alu_ctrl;
-        alu_srcb_t alu_srcb;
-        imm_type_t imm_type;
-
+        logic       reg_write;
+        logic       mem_read;
+        logic       mem_write;
+        logic [1:0] mem_size;
+        alu_ctrl_t  alu_ctrl;
+        alu_srcb_t  alu_srcb;
+        imm_type_t  imm_type;
     } control_t;
+
+    typedef struct packed {
+        logic [31:0] mem_addr;       // Data memory address
+        logic        mem_req_valid;  // Requesting Data
+        logic [31:0] mem_wdata;      // Data memory write data
+        logic        mem_we;         // Data memory write enable
+        logic [1:0]  mem_size;       // Data size
+    } mem_in_data_t;
 
     //Pipeline Registers
     typedef struct packed {
-        logic valid;
+        logic        valid;
         logic [31:0] pc;
         logic [31:0] instruction;
     } if_id_t;
@@ -79,24 +88,34 @@ package core_pkg;
         logic [31:0] rs2_data;
         logic [31:0] immediate;
         //Control
-        logic reg_write;
-        logic mem_write;
-        alu_ctrl_t alu_ctrl;
-        alu_srcb_t alu_srcb;
+        logic        reg_write;
+        logic        mem_read;
+        logic        mem_write;
+        logic [1:0]  mem_size;
+        alu_ctrl_t   alu_ctrl;
+        alu_srcb_t   alu_srcb;
         //Forwarding
-        logic [4:0] rs1_addr;
-        logic [4:0] rs2_addr;
-        logic [4:0] rd_addr;
+        logic [4:0]  rs1_addr;
+        logic [4:0]  rs2_addr;
+        logic [4:0]  rd_addr;
     } id_ex_t;
 
     typedef struct packed {
         //Data
         logic [31:0] alu_res;
         //Control
-        logic reg_write;
-        logic mem_write;
+        logic        mem_read;
+        logic        mem_write;
+        logic        reg_write;
         //Forward
-        logic [4:0] rd_addr;
+        logic [4:0]  rd_addr;
     } ex_mem_t;
+
+    typedef struct packed {
+        logic [31:0] alu_res;
+        logic [31:0] mem_rdata;
+        logic        reg_write;
+        logic [4:0]  rd_addr;
+    } mem_wb_t;
 
 endpackage

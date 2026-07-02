@@ -11,6 +11,8 @@ module controller (
     //Main Decoder
     always_comb begin
         ctrl.reg_write = 0;
+        ctrl.mem_read  = 0;
+        ctrl.mem_size  = '0;
         ctrl.mem_write = 0;
         case (opcode)
             OPCODE_R: begin
@@ -24,9 +26,16 @@ module controller (
             OPCODE_S: begin
                 ctrl.mem_write = 1;
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
+                ctrl.mem_size  = funct3[1:0];
+            end
+            OPCODE_L: begin
+                ctrl.mem_read = 1;
+                ctrl.alu_srcb = ALUB_IMMEDIATE;
+                ctrl.mem_size = funct3[1:0];
             end
             default: begin
                 ctrl.reg_write = 0;
+                ctrl.mem_read  = 0;
                 ctrl.mem_write = 0;
             end
         endcase

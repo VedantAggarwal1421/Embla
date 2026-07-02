@@ -58,7 +58,9 @@ module instruction_decode (
     assign id_ex_d.immediate = imm_decode(ctrl.imm_type, if_id.instruction);
 
     assign id_ex_d.reg_write = ctrl.reg_write;
+    assign id_ex_d.mem_read  = ctrl.mem_read;
     assign id_ex_d.mem_write = ctrl.mem_write;
+    assign id_ex_d.mem_size  = ctrl.mem_size;
     assign id_ex_d.alu_ctrl  = ctrl.alu_ctrl;
     assign id_ex_d.alu_srcb  = ctrl.alu_srcb;
 

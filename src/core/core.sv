@@ -2,22 +2,25 @@
 import core_pkg::*;
 
 module core (
-    input         clk,
-    input         rst,
+    input  logic        clk,
+    input  logic        rst,
     //Instruction Fetch
-    output [31:0] if_addr,        //Instruction fetch address
-    output        if_req_valid,   //Fetch request valid
-    input  [31:0] if_data,        // Instruction fetch data
-    input         if_data_valid,  // Instruction fetch data valid
-    input         if_stall,
+    output logic [31:0] if_addr,          // Instruction fetch address
+    output logic        if_req_valid,     // Fetch request valid
+    input  logic [31:0] if_data,          // Instruction fetch data
+    input  logic        if_data_valid,    // Instruction fetch data valid
+    input  logic        if_stall,
     //Data Memory
-    output [31:0] dm_addr,        // Data memory address
-    output [31:0] dm_wdata,       // Data memory write data
-    output        dm_we,          // Data memory write enable
-    output [ 1:0] dm_size,        // Data memory size (00=byte, 01=halfword, 10=word)
-    input  [31:0] dm_rdata        // Data memory read data
+    output logic [31:0] mem_addr,         // Data memory address
+    output logic        mem_req_valid,    // Requesting Data
+    output logic [31:0] mem_wdata,        // Data memory write data
+    output logic        mem_we,           // Data memory write enable
+    output logic [ 1:0] mem_size,         // Data memory size (00=byte, 01=halfword, 10=word)
+    input  logic        mem_wdata_ready,  // Write completed
+    input  logic [31:0] mem_rdata,        // Data memory read data
+    input  logic        mem_rdata_ready   // Data is ready to be read
 );
-    // Instruction Fetch(F) -> Instruction Decode(D) -> Execute(E) -> Memory Access(M) -> Write Back(W)
+    // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
     if_id_t if_id_d;
     if_id_t if_id_q;
@@ -75,13 +78,21 @@ module core (
 
     ex_mem_t ex_mem_d;
     ex_mem_t ex_mem_q;
+    mem_in_data_t mem_in_data;
 
     execute execute_inst (
-        .clk     (clk),
-        .rst     (rst),
-        .id_ex   (id_ex_q),
-        .ex_mem_d(ex_mem_d)
+        .clk        (clk),
+        .rst        (rst),
+        .id_ex      (id_ex_q),
+        .ex_mem_d   (ex_mem_d),
+        .mem_in_data(mem_in_data)
     );
+
+    assign mem_addr      = mem_in_data.mem_addr;
+    assign mem_req_valid = mem_in_data.mem_req_valid;
+    assign mem_wdata     = mem_in_data.mem_wdata;
+    assign mem_we        = mem_in_data.mem_we;
+    assign mem_size      = mem_in_data.mem_size;
 
     //EX/MEM Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
@@ -89,7 +100,33 @@ module core (
             ex_mem_q <= '0;
         end else begin
             ex_mem_q <= ex_mem_d;
-            $display("ALU RESULT: %h, TIME: %0t", ex_mem_q.alu_res, $time);
+            //$display("ALU RESULT: %h, TIME: %0t", ex_mem_q.alu_res, $time);
+        end
+    end
+
+    //Memory Access Stage
+    mem_wb_t mem_wb_d;
+    mem_wb_t mem_wb_q;
+    logic mem_stall;
+
+    memory_access mem_inst (
+        .clk(clk),
+        .rst(rst),
+        .mem_wdata_ready(mem_wdata_ready),
+        .mem_rdata(mem_rdata),
+        .mem_rdata_ready(mem_rdata_ready),
+        .mem_stall(mem_stall),
+        .ex_mem(ex_mem_q),
+        .mem_wb_d(mem_wb_d)
+    );
+
+    //MEM/WB
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            mem_wb_q <= '0;
+        end else begin
+            mem_wb_q <= mem_wb_d;
+            $display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
         end
     end
 endmodule

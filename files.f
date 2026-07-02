@@ -10,4 +10,6 @@ src/core/ID.sv
 src/core/alu.sv
 src/core/EX.sv
 src/core/regfile.sv
+src/core/MEM.sv
 src/memory/imem.sv
+src/memory/dmem.sv
