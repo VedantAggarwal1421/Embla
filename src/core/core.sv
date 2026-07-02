@@ -58,9 +58,9 @@ module core (
         .clk    (clk),
         .rst    (rst),
         .if_id  (if_id_q),
-        .rd_data(32'b0),
-        .rd_addr(5'b0),
-        .rd_we  (1'b0),
+        .rd_data(rd_data),  //These signals come from write back stage.
+        .rd_addr(rd_addr),
+        .rd_we  (rd_we),
         .id_ex_d(id_ex_d)
     );
 
@@ -70,7 +70,7 @@ module core (
             id_ex_q <= '0;
         end else begin
             id_ex_q <= id_ex_d;
-            //$display("Destination: %b, Time: %0t", id_ex_q.rd_addr, $time);
+            //$display("DATA1: %h, DATA2: %h, Time: %0t", id_ex_d.rs1_data, id_ex_d.rs2_data, $time);
         end
     end
 
@@ -120,13 +120,29 @@ module core (
         .mem_wb_d(mem_wb_d)
     );
 
-    //MEM/WB
+    //MEM/WB Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             mem_wb_q <= '0;
         end else begin
             mem_wb_q <= mem_wb_d;
-            $display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
+            //$display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
         end
     end
+
+    //Write Back Stage
+
+    logic [31:0] rd_data;
+    logic [ 4:0] rd_addr;
+    logic        rd_we;
+
+    write_back wb_inst (
+        .clk(clk),
+        .rst(rst),
+        .mem_wb(mem_wb_q),
+        .rd_data(rd_data),
+        .rd_addr(rd_addr),
+        .rd_we(rd_we)
+    );
+
 endmodule

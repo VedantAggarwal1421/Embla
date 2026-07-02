@@ -17,8 +17,11 @@ module instruction_decode (
 
 );
 
-    logic [4:0] rs1_addr;
-    logic [4:0] rs2_addr;
+    logic [ 4:0] rs1_addr;
+    logic [ 4:0] rs2_addr;
+
+    logic [31:0] rs1_data;
+    logic [31:0] rs2_data;
 
     assign rs1_addr = if_id.instruction[19:15];
     assign rs2_addr = if_id.instruction[24:20];
@@ -26,6 +29,9 @@ module instruction_decode (
     assign id_ex_d.rs1_addr = rs1_addr;
     assign id_ex_d.rs2_addr = rs2_addr;
     assign id_ex_d.rd_addr = if_id.instruction[11:7];
+
+    assign id_ex_d.rs1_data = rs1_data;
+    assign id_ex_d.rs2_data = rs2_data;
 
     register_file rf_inst (
         .clk(clk),
@@ -35,8 +41,8 @@ module instruction_decode (
         .rd_addr(rd_addr),
         .rd_data(rd_data),
         .rd_we(rd_we),
-        .rs1_data(id_ex_d.rs1_data),
-        .rs2_data(id_ex_d.rs2_data)
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data)
     );
 
     logic [2:0] funct3;
@@ -63,5 +69,6 @@ module instruction_decode (
     assign id_ex_d.mem_size  = ctrl.mem_size;
     assign id_ex_d.alu_ctrl  = ctrl.alu_ctrl;
     assign id_ex_d.alu_srcb  = ctrl.alu_srcb;
+    assign id_ex_d.res_src   = ctrl.res_src;
 
 endmodule

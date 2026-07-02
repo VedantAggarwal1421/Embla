@@ -23,6 +23,7 @@ module register_file (
             end
         end else if (rd_we && rd_addr != 5'b0) begin  //Ensure that x0 is never written to
             reg_file[rd_addr] <= rd_data;  //Write data to the destination register
+            $display("WRITE: %h, REG: %h, TIME: %0t", rd_data, rd_addr, $time);
         end
     end
 endmodule

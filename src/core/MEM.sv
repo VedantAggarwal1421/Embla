@@ -18,4 +18,5 @@ module memory_access (
     assign mem_wb_d.mem_rdata = mem_rdata;
     assign mem_wb_d.reg_write = ex_mem.reg_write;
     assign mem_wb_d.rd_addr = ex_mem.rd_addr;
+    assign mem_wb_d.res_src = ex_mem.res_src;
 endmodule

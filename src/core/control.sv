@@ -18,10 +18,12 @@ module controller (
             OPCODE_R: begin
                 ctrl.reg_write = 1;
                 ctrl.alu_srcb  = ALUB_REGISTER;
+                ctrl.res_src   = RES_ALU;
             end
             OPCODE_I: begin
                 ctrl.reg_write = 1;
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
+                ctrl.res_src   = RES_ALU;
             end
             OPCODE_S: begin
                 ctrl.mem_write = 1;
@@ -29,9 +31,11 @@ module controller (
                 ctrl.mem_size  = funct3[1:0];
             end
             OPCODE_L: begin
-                ctrl.mem_read = 1;
-                ctrl.alu_srcb = ALUB_IMMEDIATE;
-                ctrl.mem_size = funct3[1:0];
+                ctrl.reg_write = 1;
+                ctrl.mem_read  = 1;
+                ctrl.alu_srcb  = ALUB_IMMEDIATE;
+                ctrl.mem_size  = funct3[1:0];
+                ctrl.res_src   = RES_MEM;
             end
             default: begin
                 ctrl.reg_write = 0;

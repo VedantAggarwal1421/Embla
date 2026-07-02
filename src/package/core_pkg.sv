@@ -32,6 +32,11 @@ package core_pkg;
         ALUB_IMMEDIATE
     } alu_srcb_t;
 
+    typedef enum logic {
+        RES_ALU,
+        RES_MEM
+    } res_src_t;
+
     //Immediates
     typedef enum logic [2:0] {
         IMM_I,
@@ -64,6 +69,7 @@ package core_pkg;
         logic [1:0] mem_size;
         alu_ctrl_t  alu_ctrl;
         alu_srcb_t  alu_srcb;
+        res_src_t   res_src;
         imm_type_t  imm_type;
     } control_t;
 
@@ -94,6 +100,7 @@ package core_pkg;
         logic [1:0]  mem_size;
         alu_ctrl_t   alu_ctrl;
         alu_srcb_t   alu_srcb;
+        res_src_t    res_src;
         //Forwarding
         logic [4:0]  rs1_addr;
         logic [4:0]  rs2_addr;
@@ -107,6 +114,7 @@ package core_pkg;
         logic        mem_read;
         logic        mem_write;
         logic        reg_write;
+        res_src_t    res_src;
         //Forward
         logic [4:0]  rd_addr;
     } ex_mem_t;
@@ -116,6 +124,7 @@ package core_pkg;
         logic [31:0] mem_rdata;
         logic        reg_write;
         logic [4:0]  rd_addr;
+        res_src_t    res_src;
     } mem_wb_t;
 
 endpackage
