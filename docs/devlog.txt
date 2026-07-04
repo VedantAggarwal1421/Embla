@@ -1,0 +1,9 @@
+Day 1: (3/07/26)
+From here on out I'll maintain a devlog journal. In order to document design decisions,
+Roadblocks, and whatever else i want to document. Both to look back on and also so that
+I'll be able to put a more refined version in the actual documentation.
+
+At this point basic pipeline structure is implemented. No hazard logic yet and nothing
+else outside the core.
+
+For now I'll implement a basic uart transmitter so i can verify it works on hardware. 

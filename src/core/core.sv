@@ -22,8 +22,13 @@ module core (
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
-    if_id_t if_id_d;
-    if_id_t if_id_q;
+    logic   [31:0] rd_data;
+    logic   [ 4:0] rd_addr;
+    logic          rd_we;
+
+
+    if_id_t        if_id_d;
+    if_id_t        if_id_q;
 
     instruction_fetch if_inst (
         .clk              (clk),
@@ -131,10 +136,6 @@ module core (
     end
 
     //Write Back Stage
-
-    logic [31:0] rd_data;
-    logic [ 4:0] rd_addr;
-    logic        rd_we;
 
     write_back wb_inst (
         .clk(clk),

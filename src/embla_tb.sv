@@ -23,12 +23,15 @@ module embla_tb;
 
     initial begin
         // Reset the system
+        $dumpfile("obj_dir/wave.vcd");
+        $dumpvars(0, embla_tb);
+
         rst = 1;
         #20;
         rst = 0;
 
         // Wait for some time to observe the behavior
-        #200;
+        #2000;
 
         // Finish the simulation
         $finish;

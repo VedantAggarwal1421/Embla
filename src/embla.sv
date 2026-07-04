@@ -22,6 +22,9 @@ module embla (
     logic [31:0] mem_rdata;
     logic        mem_rdata_ready;
 
+    logic        routed_mem_enable;
+    logic        routed_uart_enable;
+
     core core_inst (
         .clk(clk),
         .rst(rst),
@@ -44,6 +47,20 @@ module embla (
         .mem_rdata_ready(mem_rdata_ready)
     );
 
+    //Routing the data.
+    //0x10000000 -> UART
+    //Everything else -> Data mem
+    always_comb begin
+        if (mem_addr[31] == 1'b1) begin
+            routed_uart_enable = 1'b0;
+            routed_mem_enable  = mem_we;
+        end else begin
+            routed_uart_enable = mem_we;
+            routed_mem_enable  = 1'b0;
+        end
+    end
+
+    //Memories
     imem imem_inst (
         .clk(clk),
         .rst(rst),
@@ -60,10 +77,19 @@ module embla (
         .addr(mem_addr),
         .req_valid(mem_req_valid),
         .wdata(mem_wdata),
-        .we(mem_we),
+        .we(routed_mem_enable),
         .size(mem_size),
         .wdata_ready(mem_wdata_ready),
         .rdata(mem_rdata),
         .rdata_ready(mem_rdata_ready)
+    );
+
+    //UART MODULE
+    uart_driver uart_inst (
+        .clk(clk),
+        .rst(rst),
+        .tx_word(mem_wdata),
+        .tx_data_valid(routed_uart_enable),
+        .tx_pin(uart_tx)
     );
 endmodule

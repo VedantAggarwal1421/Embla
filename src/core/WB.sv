@@ -1,3 +1,5 @@
+import core_pkg::*;
+
 module write_back (
     input logic clk,
     input logic rst,

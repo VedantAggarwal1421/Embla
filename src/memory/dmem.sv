@@ -27,6 +27,7 @@ module dmem (
         end else if (we) begin
             data_mem[addr[11:2]] <= wdata;
             wdata_ready <= 1'b1;
+            $display("MEM: %h, TIME: ", wdata, $time);
         end else if (req_valid) begin
             rdata <= data_mem[addr[11:2]];
             rdata_ready <= 1'b1;

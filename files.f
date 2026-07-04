@@ -14,3 +14,5 @@ src/core/MEM.sv
 src/core/WB.sv
 src/memory/imem.sv
 src/memory/dmem.sv
+src/uart/uart_driver.sv
+src/uart/uart_tx.sv

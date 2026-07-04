@@ -1,0 +1,3 @@
+read_slang src/embla.sv src/*/**.sv
+synth_gowin -top embla -family gw2a -noabc9
+write_json build/synth.json
