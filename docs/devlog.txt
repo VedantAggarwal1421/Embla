@@ -7,3 +7,21 @@ At this point basic pipeline structure is implemented. No hazard logic yet and n
 else outside the core.
 
 For now I'll implement a basic uart transmitter so i can verify it works on hardware. 
+
+Day 2&3: (4/07/26 5/07/26)
+Implemented the Uart and everything broke. Everything worked fine in simulation, nothing
+worked on actual hardware, after a day of trying to debug things , i gave up and rewrote
+the modules one by one and tested on hardware. First got the uart running them imported
+the stages one by one.
+
+Issues : 
+->yosys-slang didnt support readmemh until recently , my toolchain wasnt up to date
+so the entire memory was just 0s , and synthesizer optimized away everything.
+->A bug in uart module causing the first 8 bits to update a cycle later.
+->Data memory wasnt being interpreted as bram , it got implemented with 10k luts.
+-> The way control unit was written , synthesizer somehow failed and found a combinational
+loop even when there wasnt one. I cant have multiple always combinational blocks in the same
+module i guess.
+
+What I Learnt: Synthesis only proves logic is correct. It is no guarantee that it will work on hardware.
+UpNext: Going to implement forwarding and stalls.
