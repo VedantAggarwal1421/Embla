@@ -5,11 +5,14 @@ module core (
     input  logic        clk,
     input  logic        rst,
     //Instruction Fetch
-    output logic [31:0] if_addr,          // Instruction fetch address
-    output logic        if_req_valid,     // Fetch request valid
-    input  logic [31:0] if_data,          // Instruction fetch data
-    input  logic        if_data_valid,    // Instruction fetch data valid
+    output logic [31:0] if_addr,        // Instruction fetch address
+    output logic        if_req_valid,   // Fetch request valid
+    input  logic [31:0] if_data,        // Instruction fetch data
+    input  logic        if_data_valid,  // Instruction fetch data valid
     input  logic        if_stall,
+
+    output logic [31:0] debug_uart,
+    output logic [31:0] debug_out,
     //Data Memory
     output logic [31:0] mem_addr,         // Data memory address
     output logic        mem_req_valid,    // Requesting Data
@@ -48,14 +51,15 @@ module core (
         if_id_q.valid <= 1'b0;  // Default to not valid
         if (rst) begin
             if_id_q <= '0;
+            //debug_out <= '0;
         end else if (if_id_d.valid == 1'b1) begin
             if_id_q <= if_id_d;
+            //debug_out <= if_id_d;
             //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
         end
     end
 
     //Instruction Decode
-
     id_ex_t id_ex_d;
     id_ex_t id_ex_q;
 
@@ -73,11 +77,14 @@ module core (
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             id_ex_q <= '0;
+            //debug_out <= '0;
         end else begin
             id_ex_q <= id_ex_d;
+            //debug_out <= id_ex_d.immediate;
             //$display("DATA1: %h, DATA2: %h, Time: %0t", id_ex_d.rs1_data, id_ex_d.rs2_data, $time);
         end
     end
+
 
     //Execute Stage
 
@@ -103,8 +110,10 @@ module core (
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             ex_mem_q <= '0;
+            //debug_out <= '0;
         end else begin
             ex_mem_q <= ex_mem_d;
+            //debug_out <= ex_mem_d.alu_res;
             //$display("ALU RESULT: %h, TIME: %0t", ex_mem_q.alu_res, $time);
         end
     end
@@ -128,9 +137,13 @@ module core (
     //MEM/WB Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            mem_wb_q <= '0;
+            mem_wb_q   <= '0;
+            debug_out  <= '0;
+            debug_uart <= '0;
         end else begin
-            mem_wb_q <= mem_wb_d;
+            mem_wb_q   <= mem_wb_d;
+            debug_out  <= mem_wb_d.mem_rdata;
+            debug_uart <= mem_wb_d.mem_rdata;
             //$display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
         end
     end
@@ -145,5 +158,4 @@ module core (
         .rd_addr(rd_addr),
         .rd_we(rd_we)
     );
-
 endmodule

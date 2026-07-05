@@ -12,29 +12,33 @@ module dmem (
     output logic        rdata_ready   // Data is ready to be read        
 );
 
+    (* ram_style = "block" *)
     logic [31:0] data_mem[0:1023]; //Implementing memory as bram right now , will switch to sdram later.
 
 
-    always_ff @(posedge clk or posedge rst) begin
-        wdata_ready <= 1'b0;
-        rdata       <= 32'b0;
-        rdata_ready <= 1'b0;
-
+    always_ff @(posedge clk) begin
         if (rst) begin
-            wdata_ready <= 1'b0;
-            rdata <= 32'b0;
-            rdata_ready <= 1'b0;
-        end else if (we) begin
-            data_mem[addr[11:2]] <= wdata;
-            wdata_ready <= 1'b1;
-            $display("MEM: %h, TIME: ", wdata, $time);
-        end else if (req_valid) begin
-            rdata <= data_mem[addr[11:2]];
-            rdata_ready <= 1'b1;
+            wdata_ready <= 0;
+            rdata_ready <= 0;
+            rdata <= 0;
+        end else begin
+            wdata_ready <= 0;
+            rdata_ready <= 0;
+
+            if (we) begin
+                data_mem[addr[11:2]] <= wdata;
+                wdata_ready <= 1;
+            end
+
+            if (req_valid) begin
+                rdata <= data_mem[addr[11:2]];
+                rdata_ready <= 1;
+            end
         end
     end
 
     initial begin
         data_mem[0] = 32'hDEADBEEF;
+        data_mem[1] = 32'hcafebabe;
     end
 endmodule

@@ -11,7 +11,6 @@ module uart_driver (
 
     reg  [31:0] tx_data_word;
     reg  [ 7:0] tx_data;
-    reg  [ 7:0] tx_byte;
     wire        tx_data_ready;
     reg         tx_active;
     reg  [ 1:0] tx_cnt;
@@ -33,6 +32,8 @@ module uart_driver (
                 S_IDLE: begin
                     if(tx_data_valid) begin
                         tx_data_word <= tx_word;
+                        tx_cnt <= 0;
+                        tx_data <= tx_word[31:24];
                         state <= S_SEND;
                         tx_active <= 1'b1;
                     end
@@ -41,11 +42,10 @@ module uart_driver (
                     end
                 end
                 S_SEND: begin
-                    tx_data <= tx_byte;
-                    if(tx_data_ready && tx_cnt < 3)
+                    if(tx_data_ready && tx_cnt < 3) begin
+                        tx_data <= tx_data_word[(2-tx_cnt)*8 +: 8];
                         tx_cnt <= tx_cnt+ 2'd1;
-                    else if(tx_data_ready) begin
-                        tx_cnt <= 2'd0;
+                    end else if(tx_data_ready) begin
                         state <= S_IDLE;
                         tx_active <= 1'b0;
                     end else begin
@@ -55,9 +55,6 @@ module uart_driver (
             endcase
         end
     end
-
-    always @(*)
-        tx_byte = tx_data_word[(3 - tx_cnt)*8 +: 8];
     
     //verilog_format: on
     uart_tx #(

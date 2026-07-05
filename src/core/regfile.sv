@@ -26,4 +26,5 @@ module register_file (
             $display("WRITE: %h, REG: %h, TIME: %0t", rd_data, rd_addr, $time);
         end
     end
+
 endmodule

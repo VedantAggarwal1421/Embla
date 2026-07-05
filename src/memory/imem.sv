@@ -11,7 +11,9 @@ module imem (
 );
 
     //Later will be implemented in SDRAM, for now we will use BRAM to store instructions for simulation purposes.
-    logic [31:0] memory[0:255];  // 256 x 32-bit instruction memory
+    (* ram_style = "block" *)
+    logic [31:0] memory[0:255];
+    // 256 x 32-bit instruction memory
 
     always_ff @(posedge clk or posedge rst) begin
         data_valid <= 1'b0;  // Default to not valid

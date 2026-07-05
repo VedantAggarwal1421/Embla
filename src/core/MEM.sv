@@ -13,7 +13,6 @@ module memory_access (
     output mem_wb_t mem_wb_d
 );
     assign mem_stall = (ex_mem.mem_read && ~mem_rdata_ready) || (ex_mem.mem_write && ~mem_wdata_ready);
-
     assign mem_wb_d.alu_res = ex_mem.alu_res;
     assign mem_wb_d.mem_rdata = mem_rdata;
     assign mem_wb_d.reg_write = ex_mem.reg_write;
