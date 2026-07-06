@@ -85,19 +85,25 @@ module core (
         end
     end
 
-
     //Execute Stage
 
     ex_mem_t ex_mem_d;
     ex_mem_t ex_mem_q;
     mem_in_data_t mem_in_data;
 
+    forward_sel_t fwd_a_sel;
+    forward_sel_t fwd_b_sel;
+
     execute execute_inst (
-        .clk        (clk),
-        .rst        (rst),
-        .id_ex      (id_ex_q),
-        .ex_mem_d   (ex_mem_d),
-        .mem_in_data(mem_in_data)
+        .clk         (clk),
+        .rst         (rst),
+        .id_ex       (id_ex_q),
+        .fwd_a_sel   (fwd_a_sel),
+        .fwd_b_sel   (fwd_b_sel),
+        .fwd_mem_data(ex_mem_q.alu_res),
+        .fwd_wb_data (rd_data),
+        .ex_mem_d    (ex_mem_d),
+        .mem_in_data (mem_in_data)
     );
 
     assign mem_addr      = mem_in_data.mem_addr;
@@ -143,7 +149,7 @@ module core (
         end else begin
             mem_wb_q   <= mem_wb_d;
             debug_out  <= mem_wb_d.mem_rdata;
-            debug_uart <= mem_wb_d.mem_rdata;
+            debug_uart <= mem_wb_d.alu_res;
             //$display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
         end
     end
@@ -157,5 +163,17 @@ module core (
         .rd_data(rd_data),
         .rd_addr(rd_addr),
         .rd_we(rd_we)
+    );
+
+    //Hazard Unit
+    hazard_unit hazard_inst (
+        .mem_rd_addr(ex_mem_q.rd_addr),
+        .mem_reg_write(ex_mem_q.reg_write),
+        .wb_rd_addr(mem_wb_q.rd_addr),
+        .wb_reg_write(mem_wb_q.reg_write),
+        .ex_rs1_addr(id_ex_q.rs1_addr),
+        .ex_rs2_addr(id_ex_q.rs2_addr),
+        .fwd_a_sel(fwd_a_sel),
+        .fwd_b_sel(fwd_b_sel)
     );
 endmodule

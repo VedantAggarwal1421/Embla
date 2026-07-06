@@ -6,6 +6,11 @@ module execute (
 
     input id_ex_t id_ex,
 
+    input forward_sel_t fwd_a_sel,
+    input forward_sel_t fwd_b_sel,
+    input logic [31:0] fwd_mem_data,
+    input logic [31:0] fwd_wb_data,
+
     output ex_mem_t ex_mem_d,
     output mem_in_data_t mem_in_data
 );
@@ -14,12 +19,32 @@ module execute (
     logic [31:0] alu_b;
     logic [31:0] alu_res;
 
-    assign alu_a = id_ex.rs1_data;
+    logic [31:0] fwd_a;
+    logic [31:0] fwd_b;
+
+    assign alu_a = fwd_a;
     //ALU Source B MUX
     always_comb begin
         unique case (id_ex.alu_srcb)
-            ALUB_REGISTER:  alu_b = id_ex.rs2_data;
+            ALUB_REGISTER:  alu_b = fwd_b;
             ALUB_IMMEDIATE: alu_b = id_ex.immediate;
+        endcase
+    end
+
+    //Forward A Mux
+    always_comb begin
+        case (fwd_a_sel)
+            FWD_REG: fwd_a = id_ex.rs1_data;
+            FWD_MEM: fwd_a = fwd_mem_data;
+            FWD_WB:  fwd_a = fwd_wb_data;
+        endcase
+    end
+    //Forward B Mux
+    always_comb begin
+        case (fwd_b_sel)
+            FWD_REG: fwd_b = id_ex.rs2_data;
+            FWD_MEM: fwd_b = fwd_mem_data;
+            FWD_WB:  fwd_b = fwd_wb_data;
         endcase
     end
 

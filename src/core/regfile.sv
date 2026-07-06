@@ -13,8 +13,8 @@ module register_file (
 );
 
     logic [31:0] reg_file[31:0];
-    assign rs1_data = (rs1_addr == 5'b0) ? 32'b0 : reg_file[rs1_addr];  //Ensure that x0 is always 0
-    assign rs2_data = (rs2_addr == 5'b0) ? 32'b0 : reg_file[rs2_addr]; //Combinattionaly read register file
+    assign rs1_data = (rd_we && rd_addr != 5'd0 && rd_addr == rs1_addr)? rd_data : reg_file[rs1_addr];  //Write before read
+    assign rs2_data = (rd_we && rd_addr != 5'd0 && rd_addr == rs2_addr)? rd_data : reg_file[rs2_addr];
 
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin

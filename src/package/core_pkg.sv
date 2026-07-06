@@ -32,6 +32,12 @@ package core_pkg;
         ALUB_IMMEDIATE
     } alu_srcb_t;
 
+    typedef enum logic [1:0] {
+        FWD_REG,
+        FWD_MEM,
+        FWD_WB
+    } forward_sel_t;
+
     typedef enum logic {
         RES_ALU,
         RES_MEM

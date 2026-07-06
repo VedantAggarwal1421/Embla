@@ -1,4 +1,4 @@
-lw x15, 4(x0)
+lw x15, 4(x0) # This exists so my memory isnt optimized away.
 
 ############################################################
 # Test 1 : Forward A from EX/MEM
