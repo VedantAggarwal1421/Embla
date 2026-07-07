@@ -133,4 +133,20 @@ package core_pkg;
         res_src_t    res_src;
     } mem_wb_t;
 
+    // Stall And Flush Signals
+
+    typedef struct packed {
+        logic if_id;
+        logic id_ex;
+        logic ex_mem;
+        logic mem_wb;
+    } stall_t;
+
+    typedef struct packed {
+        logic if_id;
+        logic id_ex;
+        logic ex_mem;
+        logic mem_wb;
+    } flush_t;
+
 endpackage

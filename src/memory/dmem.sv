@@ -38,7 +38,7 @@ module dmem (
     end
 
     initial begin
-        data_mem[0] = 32'hDEADBEEF;
-        data_mem[1] = 32'hcafebabe;
+        data_mem[0] = 32'hDEAD0000;
+        data_mem[1] = 32'hf0f0f0f0;
     end
 endmodule

@@ -67,6 +67,7 @@ module embla (
         .if_data(if_data),
         .if_data_valid(if_data_valid),
         .if_stall(if_stall),
+        .debug_s2(s2),
         .debug_out(debug_out),
         .debug_uart(debug_uart),
 

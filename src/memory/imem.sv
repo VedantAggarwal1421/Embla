@@ -16,8 +16,7 @@ module imem (
     // 256 x 32-bit instruction memory
 
     always_ff @(posedge clk or posedge rst) begin
-        data_valid <= 1'b0;  // Default to not valid
-        stall      <= 1'b0;  // Default to not stalled
+        stall <= 1'b0;
 
         if (rst) begin
             data <= 32'b0;

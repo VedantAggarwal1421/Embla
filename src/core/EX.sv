@@ -1,3 +1,4 @@
+/* verilator lint_off CASEINCOMPLETE */
 import core_pkg::*;
 
 module execute (
@@ -23,6 +24,12 @@ module execute (
     logic [31:0] fwd_b;
 
     assign alu_a = fwd_a;
+
+    // alu_srcb_t alu_src_b_debug;
+    // logic [31:0] immediate_debug;
+
+    // assign alu_src_b_debug = id_ex.alu_srcb;
+    // assign immediate_debug = id_ex.immediate;
     //ALU Source B MUX
     always_comb begin
         unique case (id_ex.alu_srcb)
@@ -33,6 +40,7 @@ module execute (
 
     //Forward A Mux
     always_comb begin
+        fwd_a = id_ex.rs1_data;
         case (fwd_a_sel)
             FWD_REG: fwd_a = id_ex.rs1_data;
             FWD_MEM: fwd_a = fwd_mem_data;
@@ -41,6 +49,7 @@ module execute (
     end
     //Forward B Mux
     always_comb begin
+        fwd_b = id_ex.rs2_data;
         case (fwd_b_sel)
             FWD_REG: fwd_b = id_ex.rs2_data;
             FWD_MEM: fwd_b = fwd_mem_data;
@@ -65,7 +74,7 @@ module execute (
 
     assign mem_in_data.mem_addr      = alu_res;
     assign mem_in_data.mem_req_valid = id_ex.mem_read;
-    assign mem_in_data.mem_wdata     = id_ex.rs2_data;
+    assign mem_in_data.mem_wdata     = fwd_b;
     assign mem_in_data.mem_we        = id_ex.mem_write;
     assign mem_in_data.mem_size      = id_ex.mem_size;
 endmodule

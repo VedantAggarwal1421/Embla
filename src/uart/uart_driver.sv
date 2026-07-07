@@ -1,4 +1,4 @@
-
+/* verilator lint_off WIDTHEXPAND */
 module uart_driver (
     input logic clk,
     input logic rst,
@@ -24,7 +24,7 @@ module uart_driver (
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             tx_data <= 8'd0;
-            tx_cnt <= 8'd0;
+            tx_cnt <= 2'd0;
             tx_active <= 1'b0;
             state <= S_IDLE;
         end else begin

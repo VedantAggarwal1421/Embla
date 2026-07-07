@@ -5,6 +5,9 @@ module embla_tb;
     logic rst;
     logic uart_tx;
     logic uart_rx;
+    logic led;
+    logic led2;
+    logic s2;
 
     initial begin
         clk = 0;
@@ -18,7 +21,10 @@ module embla_tb;
         .clk(clk),
         .rst(rst),
         .uart_tx(uart_tx),
-        .uart_rx(uart_rx)
+        .uart_rx(uart_rx),
+        .led(led),
+        .led2(led2),
+        .s2(s2)
     );
 
     initial begin

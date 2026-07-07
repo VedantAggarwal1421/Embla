@@ -9,37 +9,45 @@ module instruction_fetch (
     input  logic        if_stall,
 
     output logic [31:0] instruction,
-    output logic [31:0] instruction_pc,
-    output logic        instruction_valid  // Signal indicating instruction is valid
+    output logic [31:0] instruction_pc
 );
 
     logic [31:0] pc;
     logic [31:0] old_pc;
 
+    logic [31:0] fetch_buff_instr;
+    logic [31:0] fetch_buff_pc;
+    logic        fetch_buff_valid;
+
+
+    assign if_req_valid = ~if_stall;  //If not stalled request instructions
     assign if_addr = pc;
-    assign if_req_valid = ~if_stall;  // Always request instructions. Will add stall logic later.
 
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            pc <= 32'b0;
-            old_pc <= 32'b0;
+            pc <= 32'd0;
+            old_pc <= 32'd0;
         end else if (if_req_valid) begin
-            pc <= pc + 4;  // Increment PC by 4 for next instruction
-            old_pc <= pc;  // Store the current PC
+            pc <= pc + 32'd4;
+            old_pc <= pc;
         end
     end
 
     always_ff @(posedge clk or posedge rst) begin
-        instruction_valid <= 1'b0;  // Default to not valid
         if (rst) begin
-            instruction <= 32'b0;
-            instruction_pc <= 32'b0;
-            instruction_valid <= 1'b0;
+            fetch_buff_instr <= 32'b0;
+            fetch_buff_pc <= 32'b0;
+            fetch_buff_valid <= 1'b0;
+        end else if (!if_req_valid && if_data_valid) begin
+            fetch_buff_instr <= if_data;
+            fetch_buff_pc <= old_pc;
+            fetch_buff_valid <= 1'b1;
         end else begin
-            instruction <= if_data;
-            instruction_pc <= old_pc;  // Use the stored PC for the current instruction
-            instruction_valid <= if_data_valid;
+            fetch_buff_valid <= 1'b0;
         end
     end
+
+    assign instruction = (fetch_buff_valid) ? fetch_buff_instr : (if_data_valid) ? if_data : 32'b0;
+    assign instruction_pc = (fetch_buff_valid) ? fetch_buff_pc : old_pc;
 
 endmodule

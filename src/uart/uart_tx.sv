@@ -1,3 +1,4 @@
+/* verilator lint_off WIDTHEXPAND */
 module uart_tx #(
     parameter CLK_FREQ  = 27,
     parameter BAUD_RATE = 115200
