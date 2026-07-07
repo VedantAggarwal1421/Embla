@@ -90,6 +90,8 @@ module embla (
         .req_valid(if_req_valid),
         .data(if_data),
         .data_valid(if_data_valid),
+        .write_enable(s2),
+        .write_data(32'd0),
         .stall(if_stall)
     );
 

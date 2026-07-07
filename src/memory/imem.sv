@@ -3,9 +3,11 @@
 module imem (
     input  logic        clk,
     input  logic        rst,
-    input  logic [31:0] addr,        // Address input
-    input  logic        req_valid,   //Instruction Fetch active 
-    output logic [31:0] data,        // Data output
+    input  logic [31:0] addr,          // Address input
+    input  logic        req_valid,     //Instruction Fetch active
+    input  logic        write_enable,
+    input  logic        write_data,
+    output logic [31:0] data,          // Data output
     output logic        data_valid,
     output logic        stall
 );
@@ -22,11 +24,17 @@ module imem (
             data <= 32'b0;
             data_valid <= 1'b0;
             stall <= 1'b0;
-        end else if (req_valid) begin
-            data <= memory[addr[9:2]];
-            data_valid <= 1'b1;
         end else begin
             data_valid <= 1'b0;
+
+            if (req_valid) begin
+                data <= memory[addr[9:2]];
+                data_valid <= 1'b1;
+            end
+
+            if (write_enable) begin
+                memory[addr[9:2]] <= write_data;
+            end
         end
     end
 

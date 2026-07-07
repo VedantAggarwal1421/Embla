@@ -81,10 +81,10 @@ module core (
 
     //ID/EX Pipeline register
     always_ff @(posedge clk or posedge rst) begin
-        debug_uart <= id_ex_q.immediate;
+        //debug_uart <= id_ex_q.immediate;
         if (rst) begin
             id_ex_q <= '0;
-            debug_uart <= '0;
+            //debug_uart <= '0;
         end else if (flush.id_ex) begin
             id_ex_q <= '0;
         end else if (!pipeline_stall) begin
@@ -150,11 +150,11 @@ module core (
 
     //MEM/WB Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
-        //debug_uart <= rd_data;
+        debug_uart <= rd_data;
         if (rst) begin
-            mem_wb_q  <= '0;
-            debug_out <= '0;
-            //debug_uart <= '0;
+            mem_wb_q   <= '0;
+            debug_out  <= '0;
+            debug_uart <= '0;
         end else if (!pipeline_stall) begin
             mem_wb_q  <= mem_wb_d;
             debug_out <= mem_rdata;

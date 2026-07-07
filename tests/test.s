@@ -2,6 +2,10 @@
 # 0x00 : DEAD0000
 # 0x04 : F0F0F0F0
 
+addi x20, x0, 13
+add  x21, x0, x20
+addi x22, x20, 16
+
 # -----------------------------
 # Load-use hazard
 # -----------------------------
@@ -34,3 +38,4 @@ srl     x12, x11, x10      # 0EFDF0F0
 sw      x12, 8(x0)         # Nothing is written
 lw      x13, 8(x0)         # Load x12 = 0EFDF0F0  
 addi    x14, x13, 1        # Load Use hazard
+addi     x15, x8, 1

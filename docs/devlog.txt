@@ -25,3 +25,50 @@ module i guess.
 
 What I Learnt: Synthesis only proves logic is correct. It is no guarantee that it will work on hardware.
 UpNext: Going to implement forwarding and stalls.
+
+Day 4&5: (6/07/26 7/07/26)
+I continue to find realities of the difference between simulation and hardware. This time however
+my code wasnt working in simulation either.
+
+What i did:
+Rewrote Instruction fetch module because the way it was designed currently , it went out of sync
+whenever there was a stall.
+Added in support for forwarding and stalling.
+
+Issues:
+Forgot to forward data to memory also. Store word wasnt working as expected.
+Added in default cases for almost all always_comb blocks because hardware was failing sometimes.
+Synthesis seemed to base optimization off the test instructions , added a write port to memory
+for now and hooked it to physical button , so it cant do that.
+
+Main issue:
+The issue i spent 3 hours debugging. The test instruction:
+and     x8, x7, x1         # 0E0D0000
+looks innocent enough , and it was executing correctly too, the instruction following this depended
+on x8 and produced the right result. However instead of printing `0E0D0000` as it should have
+i was getting `0E0000`.
+This is wrong for many more reasons that just the fact the result is wrong. The most major of it being
+it should be literally impossible. My Uart module always prints 4 bytes. The fact it was printing just 3 bytes
+should not have been possible in any scenario. Ruling out the issues with cpu first , it seemed the instruction
+itself was executing fine , instructions depending on it were evaluated correctly.
+So the next culprit was the UART module , i looked through it entirely like 5 times, ran quite a few tests
+and isolated that the issue is with 0x0D. This byte looked oddly familiar too , i searched it up and its ascii
+for carriage return.
+
+Running a confirmation test
+addi x20, x0, 13
+add  x21, x0, x20
+addi x22, x20, 16
+The output was:
+00 00 00
+00 00 00
+00 00 00 1d
+
+This was it. The problem was that my serial monitor , that was supposed to be printing plain hex btw , 
+interpreted the carriage return and just skipped that byte.
+
+UpNext:
+Instead of dumping register values now , ill first convert it to ascii and print text now.
+Moving on to implement control hazards.
+
+
