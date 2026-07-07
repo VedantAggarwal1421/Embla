@@ -6,7 +6,7 @@ module imem (
     input  logic [31:0] addr,          // Address input
     input  logic        req_valid,     //Instruction Fetch active
     input  logic        write_enable,
-    input  logic        write_data,
+    input  logic [31:0] write_data,
     output logic [31:0] data,          // Data output
     output logic        data_valid,
     output logic        stall

@@ -33,6 +33,10 @@ module instruction_decode (
     assign id_ex_d.rs1_data = rs1_data;
     assign id_ex_d.rs2_data = rs2_data;
 
+    logic [31:0] inst_debug, instpc_debug;
+    assign inst_debug   = if_id.instruction;
+    assign instpc_debug = if_id.pc;
+
     register_file rf_inst (
         .clk(clk),
         .rst(rst),
