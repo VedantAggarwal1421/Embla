@@ -41,6 +41,8 @@ module core (
     branch_comp_t        br_comp;
     logic                redirect_valid;
     logic         [31:0] redirect_pc;
+    forward_sel_t        branch_a_sel;
+    forward_sel_t        branch_b_sel;
     logic                branch_flush;
     //Buffering Branch Flush to account for synchronous mem.
     logic                br_flush_buff;
@@ -97,13 +99,31 @@ module core (
     );
 
     //Branch Unit
+    logic [31:0] branch_op_a;
+    logic [31:0] branch_op_b;
+    always_comb begin
+        case(branch_a_sel)
+            FWD_REG: branch_op_a = id_ex_d.rs1_data;
+            FWD_MEM: branch_op_a = ex_mem_q.alu_res;
+            FWD_WB:  branch_op_a = rd_data;
+            default: branch_op_a = id_ex_d.rs1_data;
+        endcase
+    end
+    always_comb begin
+        case(branch_b_sel)
+            FWD_REG: branch_op_b = id_ex_d.rs2_data;
+            FWD_MEM: branch_op_b = ex_mem_q.alu_res;
+            FWD_WB:  branch_op_b = rd_data;
+            default: branch_op_b = id_ex_d.rs2_data;
+        endcase
+    end
     branch_unit branch_inst (
         .is_branch(is_branch),
         .is_conditional(is_conditional),
         .branch_pc(if_id_q.pc),
         .branch_offset(id_ex_d.immediate),
-        .rs1(id_ex_d.rs1_data),
-        .rs2(id_ex_d.rs2_data),
+        .rs1(branch_op_a),
+        .rs2(branch_op_b),
         .br_comp(br_comp),
         .redirect_valid(redirect_valid),
         .redirect_pc(redirect_pc),
@@ -210,6 +230,7 @@ module core (
     hazard_unit hazard_inst (
         .mem_rd_addr(ex_mem_q.rd_addr),
         .mem_reg_write(ex_mem_q.reg_write),
+        .mem_res_src(ex_mem_q.res_src),
         .wb_rd_addr(mem_wb_q.rd_addr),
         .wb_reg_write(mem_wb_q.reg_write),
         .ex_rs1_addr(id_ex_q.rs1_addr),
@@ -218,8 +239,11 @@ module core (
         .ex_rd_addr(id_ex_q.rd_addr),
         .id_rs1_addr(id_ex_d.rs1_addr),
         .id_rs2_addr(id_ex_d.rs2_addr),
+        .is_conditional(is_conditional),
         .fwd_a_sel(fwd_a_sel),
         .fwd_b_sel(fwd_b_sel),
+        .branch_a_sel(branch_a_sel),
+        .branch_b_sel(branch_b_sel),
         .stall(stall),
         .flush(flush)
     );
