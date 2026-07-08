@@ -29,16 +29,27 @@ module core (
     logic pipeline_stall;
     assign pipeline_stall = debug_s2;
 
-    stall_t        stall;
-    flush_t        flush;
+    stall_t              stall;
+    flush_t              flush;
 
-    logic   [31:0] rd_data;
-    logic   [ 4:0] rd_addr;
-    logic          rd_we;
+    logic         [31:0] rd_data;
+    logic         [ 4:0] rd_addr;
+    logic                rd_we;
+
+    logic                is_branch;
+    logic                is_conditional;
+    branch_comp_t        br_comp;
+    logic                redirect_valid;
+    logic         [31:0] redirect_pc;
+    logic                branch_flush;
+    //Buffering Branch Flush to account for synchronous mem.
+    logic                br_flush_buff;
+    always_ff @(posedge clk) br_flush_buff <= branch_flush;
 
 
-    if_id_t        if_id_d;
-    if_id_t        if_id_q;
+
+    if_id_t if_id_d;
+    if_id_t if_id_q;
 
     instruction_fetch if_inst (
         .clk           (clk),
@@ -49,16 +60,19 @@ module core (
         .if_data_valid (if_data_valid),
         .if_stall      (pipeline_stall || stall.if_id),
         .instruction   (if_id_d.instruction),
-        .instruction_pc(if_id_d.pc)
+        .instruction_pc(if_id_d.pc),
+        .redirect_valid(redirect_valid),
+        .redirect_pc   (redirect_pc)
     );
 
     //IF/ID Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
-        if_id_q.valid <= 1'b0;  // Default to not valid
-        //debug_uart <= if_id_q.pc;
+        //debug_uart <= if_id_q.instruction;
         if (rst) begin
             if_id_q <= '0;
             //debug_uart <= '0;
+        end else if (branch_flush || br_flush_buff) begin
+            if_id_q <= '0;
         end else if (!pipeline_stall && !stall.if_id) begin
             if_id_q <= if_id_d;
             //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
@@ -70,13 +84,30 @@ module core (
     id_ex_t id_ex_q;
 
     instruction_decode id_inst (
-        .clk    (clk),
-        .rst    (rst),
-        .if_id  (if_id_q),
-        .rd_data(rd_data),  //These signals come from write back stage.
-        .rd_addr(rd_addr),
-        .rd_we  (rd_we),
-        .id_ex_d(id_ex_d)
+        .clk           (clk),
+        .rst           (rst),
+        .if_id         (if_id_q),
+        .rd_data       (rd_data),         //These signals come from write back stage.
+        .rd_addr       (rd_addr),
+        .rd_we         (rd_we),
+        .id_ex_d       (id_ex_d),
+        .is_branch     (is_branch),
+        .is_conditional(is_conditional),
+        .br_comp       (br_comp)
+    );
+
+    //Branch Unit
+    branch_unit branch_inst (
+        .is_branch(is_branch),
+        .is_conditional(is_conditional),
+        .branch_pc(if_id_q.pc),
+        .branch_offset(id_ex_d.immediate),
+        .rs1(id_ex_d.rs1_data),
+        .rs2(id_ex_d.rs2_data),
+        .br_comp(br_comp),
+        .redirect_valid(redirect_valid),
+        .redirect_pc(redirect_pc),
+        .branch_flush(branch_flush)
     );
 
     //ID/EX Pipeline register
@@ -150,15 +181,17 @@ module core (
 
     //MEM/WB Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
-        debug_uart <= rd_data;
         if (rst) begin
             mem_wb_q   <= '0;
             debug_out  <= '0;
             debug_uart <= '0;
-        end else if (!pipeline_stall) begin
-            mem_wb_q  <= mem_wb_d;
-            debug_out <= mem_rdata;
-            //$display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
+        end else begin
+            debug_uart <= rd_data;
+            if (!pipeline_stall) begin
+                mem_wb_q <= mem_wb_d;
+                //debug_out <= mem_rdata;
+                //$display("MEM READ: %h, TIME: %0t, Stall: %b", mem_wb_q.mem_rdata, $time, mem_stall);
+            end
         end
     end
 

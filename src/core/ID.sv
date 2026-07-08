@@ -13,7 +13,12 @@ module instruction_decode (
     input logic rd_we,  // Write enable for the destination register
 
     //Data to ID/EX Pipeline Register
-    output id_ex_t id_ex_d
+    output id_ex_t id_ex_d,
+
+    //Data to branch unit
+    output logic is_branch,
+    output logic is_conditional,
+    output branch_comp_t br_comp
 
 );
 
@@ -33,9 +38,11 @@ module instruction_decode (
     assign id_ex_d.rs1_data = rs1_data;
     assign id_ex_d.rs2_data = rs2_data;
 
+    //-----Debugging Purpose Only----
     logic [31:0] inst_debug, instpc_debug;
     assign inst_debug   = if_id.instruction;
     assign instpc_debug = if_id.pc;
+    //-------------------------
 
     register_file rf_inst (
         .clk(clk),
@@ -68,11 +75,15 @@ module instruction_decode (
     assign id_ex_d.immediate = imm_decode(ctrl.imm_type, if_id.instruction);
 
     assign id_ex_d.reg_write = ctrl.reg_write;
-    assign id_ex_d.mem_read  = ctrl.mem_read;
+    assign id_ex_d.mem_read = ctrl.mem_read;
     assign id_ex_d.mem_write = ctrl.mem_write;
-    assign id_ex_d.mem_size  = ctrl.mem_size;
-    assign id_ex_d.alu_ctrl  = ctrl.alu_ctrl;
-    assign id_ex_d.alu_srcb  = ctrl.alu_srcb;
-    assign id_ex_d.res_src   = ctrl.res_src;
+    assign id_ex_d.mem_size = ctrl.mem_size;
+    assign id_ex_d.alu_ctrl = ctrl.alu_ctrl;
+    assign id_ex_d.alu_srcb = ctrl.alu_srcb;
+    assign id_ex_d.res_src = ctrl.res_src;
+
+    assign is_branch = ctrl.is_branch;
+    assign is_conditional = ctrl.is_conditional;
+    assign br_comp = ctrl.br_comp;
 
 endmodule

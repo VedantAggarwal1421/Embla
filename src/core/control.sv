@@ -44,6 +44,20 @@ module controller (
                 ctrl.res_src   = RES_MEM;
                 ctrl.imm_type  = IMM_I;
             end
+            OPCODE_B: begin
+                ctrl.imm_type = IMM_B;
+                ctrl.is_branch = 1'b1;
+                ctrl.is_conditional = 1'b1;
+                case (funct3)
+                    3'b000:  ctrl.br_comp = EQ;
+                    3'b001:  ctrl.br_comp = NE;
+                    3'b100:  ctrl.br_comp = LT;
+                    3'b101:  ctrl.br_comp = GE;
+                    3'b110:  ctrl.br_comp = LTU;
+                    3'b111:  ctrl.br_comp = GEU;
+                    default: ctrl.br_comp = EQ;
+                endcase
+            end
             default: begin
                 ctrl = '0;
             end

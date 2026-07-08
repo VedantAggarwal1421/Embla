@@ -27,6 +27,15 @@ package core_pkg;
         ALU_AND  = 4'b0111
     } alu_ctrl_t;
 
+    typedef enum logic [2:0] {
+        EQ,
+        NE,
+        LT,
+        GE,
+        LTU,
+        GEU
+    } branch_comp_t;
+
     typedef enum logic {
         ALUB_REGISTER,
         ALUB_IMMEDIATE
@@ -69,14 +78,17 @@ package core_pkg;
     //verilog_format: on
 
     typedef struct packed {
-        logic       reg_write;
-        logic       mem_read;
-        logic       mem_write;
-        logic [1:0] mem_size;
-        alu_ctrl_t  alu_ctrl;
-        alu_srcb_t  alu_srcb;
-        res_src_t   res_src;
-        imm_type_t  imm_type;
+        logic         reg_write;
+        logic         mem_read;
+        logic         mem_write;
+        logic [1:0]   mem_size;
+        alu_ctrl_t    alu_ctrl;
+        alu_srcb_t    alu_srcb;
+        res_src_t     res_src;
+        imm_type_t    imm_type;
+        logic         is_branch;
+        logic         is_conditional;
+        branch_comp_t br_comp;
     } control_t;
 
     typedef struct packed {
@@ -89,7 +101,6 @@ package core_pkg;
 
     //Pipeline Registers
     typedef struct packed {
-        logic        valid;
         logic [31:0] pc;
         logic [31:0] instruction;
     } if_id_t;

@@ -9,7 +9,11 @@ module instruction_fetch (
     input  logic        if_stall,
 
     output logic [31:0] instruction,
-    output logic [31:0] instruction_pc
+    output logic [31:0] instruction_pc,
+
+    //Branching
+    input logic        redirect_valid,
+    input logic [31:0] redirect_pc
 );
 
     logic [31:0] pc;
@@ -28,8 +32,13 @@ module instruction_fetch (
             pc <= 32'd0;
             old_pc <= 32'd0;
         end else if (if_req_valid) begin
-            pc <= pc + 32'd4;
-            old_pc <= pc;
+            if (redirect_valid) begin
+                pc <= redirect_pc;
+                old_pc <= pc;
+            end else begin
+                pc <= pc + 32'd4;
+                old_pc <= pc;
+            end
         end
     end
 

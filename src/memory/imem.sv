@@ -18,7 +18,6 @@ module imem (
     // 256 x 32-bit instruction memory
 
     always_ff @(posedge clk or posedge rst) begin
-        stall <= 1'b0;
 
         if (rst) begin
             data <= 32'b0;
@@ -26,7 +25,7 @@ module imem (
             stall <= 1'b0;
         end else begin
             data_valid <= 1'b0;
-
+            stall <= 1'b0;
             if (req_valid) begin
                 data <= memory[addr[9:2]];
                 data_valid <= 1'b1;
@@ -40,7 +39,7 @@ module imem (
 
     initial begin
         // Load instructions from a file into the instruction memory
-        $readmemh("tests/program.hex", memory);
+        $readmemh("src/program.hex", memory);
     end
 
     // always @(*) begin

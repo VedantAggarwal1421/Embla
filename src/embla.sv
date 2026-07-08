@@ -91,7 +91,7 @@ module embla (
         .data(if_data),
         .data_valid(if_data_valid),
         .write_enable(s2),
-        .write_data(32'd0),
+        .write_data(32'b0),
         .stall(if_stall)
     );
 
