@@ -1,172 +1,127 @@
-############################################################
-# Initialize
-############################################################
+    .text
+    .globl _start
 
-addi x20, x0, 0x100        # Memory base
-addi x30, x0, 0            # Pass
+_start:
 
 ############################################################
-# BEQ - Taken
+# LUI TEST
 ############################################################
 
-addi x1, x0, 10
-addi x2, x0, 10
-sw   x1, 0(x20)
-sw   x2, 4(x20)
+    lui     x1, 0x12345
+    lui     x2, 0x12345
+    bne     x1, x2, fail
 
-beq  x1, x2, BEQ_TAKEN
-addi x30, x0, 0xFF         # Should be flushed
-
-BEQ_TAKEN:
+    lui     x3, 0x54321
+    lui     x4, 0x54321
+    bne     x3, x4, fail
 
 ############################################################
-# BEQ - Not Taken
+# AUIPC TEST
 ############################################################
+# Two AUIPC instructions separated by one instruction.
+# Difference should be 8 bytes.
 
-addi x1, x0, 1
-addi x2, x0, 2
+    auipc   x5, 0
+    addi    x6, x0, 0          # register write
 
-beq  x1, x2, FAIL
-
-############################################################
-# BNE - Taken
-############################################################
-
-bne  x1, x2, BNE_TAKEN
-addi x30, x0, 0xFF
-
-BNE_TAKEN:
+    auipc   x7, 0
+    addi    x8, x5, 8
+    bne     x7, x8, fail
 
 ############################################################
-# BNE - Not Taken
+# JAL TEST
 ############################################################
+# x9 should receive the address of jal_return.
 
-addi x1, x0, 7
-addi x2, x0, 7
+    jal     x9, jal_target
 
-bne x1, x2, FAIL
-
-############################################################
-# BLT - Taken
-############################################################
-
-addi x1, x0, -2
-addi x2, x0, 5
-
-blt x1, x2, BLT_TAKEN
-addi x30, x0, 0xFF
-
-BLT_TAKEN:
+jal_return:
+    addi    x10, x0, 1
 
 ############################################################
-# BGE - Taken
+# Prepare for JALR
 ############################################################
+# Obtain PC without using label arithmetic.
 
-addi x1, x0, 5
-addi x2, x0, -1
-
-bge x1, x2, BGE_TAKEN
-addi x30, x0, 0xFF
-
-BGE_TAKEN:
+    jal     x11, get_pc
 
 ############################################################
-# BLTU - Taken
+# JAL TARGET
 ############################################################
 
-addi x1, x0, 1
-addi x2, x0, -1
+jal_target:
 
-bltu x1, x2, BLTU_TAKEN
-addi x30, x0, 0xFF
+    addi    x12, x0, 7
 
-BLTU_TAKEN:
+    auipc   x13, 0
+    addi    x13, x13, 8        # Address of the instruction after jal
 
-############################################################
-# BGEU - Taken
-############################################################
+    bne     x9, x13, fail
 
-addi x1, x0, -1
-addi x2, x0, 1
+    addi    x14, x0, 9         # register write before jump
 
-bgeu x1, x2, BGEU_TAKEN
-addi x30, x0, 0xFF
-
-BGEU_TAKEN:
+    jalr    x0, 0(x9)
 
 ############################################################
-# LW -> BEQ (load-use hazard)
+# GET PC FOR JALR
 ############################################################
 
-lw x5, 0(x20)
-lw x6, 4(x20)
+get_pc:
 
-beq x5, x6, LW_BEQ
-addi x30, x0, 0xFF
+    # x11 contains address of the next instruction.
+    # jalr_target is 20 bytes ahead:
+    #
+    # addi
+    # addi
+    # jalr
+    # fail addi
+    # fail beq
+    #
+    # = 5 instructions = 20 bytes
 
-LW_BEQ:
+    addi    x15, x11, 20
 
-############################################################
-# LW -> BLT
-############################################################
+    addi    x16, x0, 5         # register write
 
-addi x29, x0, 12
-addi x28, x0, 14
-sw x29, 8(x20)
-sw x28, 12(x20)
-lw x5, 8(x20)
-lw x6, 12(x20)
+    jalr    x17, 0(x15)
 
-blt x5, x6, LW_BLT
-addi x30, x0, 0xFF
-
-LW_BLT:
+    addi    x31, x0, 0xFF      # should never execute
+    beq     x0, x0, fail
 
 ############################################################
-# LW -> BGE (not taken)
+# JALR TARGET
 ############################################################
 
-addi x27, x0, 10
-lw x5, 8(x20)
-lw x6, 12(x20)
+jalr_target:
 
-bge x5, x6, FAIL
+    addi    x18, x0, 11
 
-############################################################
-# JAL
-############################################################
+    # x17 should contain the address after the jalr.
+    # That address is exactly 4 bytes before the fail ADDI.
 
-addi x26, x0, 9
-jal x1, JAL_TARGET
+    auipc   x19, 0
+    addi    x19, x19, -8
 
-addi x30, x0, 0xFF
+    bne     x17, x19, fail
 
-JAL_TARGET:
+    addi    x20, x0, 22
 
 ############################################################
-# Verify JAL return address
+# PASS
 ############################################################
 
-addi x25, x0, 8
-jal x0, AFTER_RA_CHECK
+pass:
+    addi    x30, x0, 1
 
-FAIL_RA:
-addi x30, x0, 0xFF
-
-AFTER_RA_CHECK:
+pass_loop:
+    beq     x0, x0, pass_loop
 
 ############################################################
-# Finished
-############################################################
-addi x24, x0, 7
-jal x0, DONE
-
-############################################################
-# Failure
+# FAIL
 ############################################################
 
-FAIL:
-addi x30, x0, 0xFF
+fail:
+    addi    x31, x0, 0xFF
 
-DONE:
-nop
+fail_loop:
+    beq     x0, x0, fail_loop

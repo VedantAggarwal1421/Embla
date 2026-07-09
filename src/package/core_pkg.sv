@@ -37,6 +37,11 @@ package core_pkg;
     } branch_comp_t;
 
     typedef enum logic {
+        ALUA_REGISTER,
+        ALUA_PC
+    } alu_srca_t;
+    
+    typedef enum logic {
         ALUB_REGISTER,
         ALUB_IMMEDIATE
     } alu_srcb_t;
@@ -46,6 +51,12 @@ package core_pkg;
         FWD_MEM,
         FWD_WB
     } forward_sel_t;
+
+    typedef enum logic [1:0] { 
+        EX_RES_ALU,
+        EX_RES_PC4,
+        EX_RES_IMM
+    } ex_res_sel_t;  //Couldnt come up with a better name. Switches between alu_res , immediate and pc+4
 
     typedef enum logic {
         RES_ALU,
@@ -82,8 +93,9 @@ package core_pkg;
         logic         mem_read;
         logic         mem_write;
         logic [1:0]   mem_size;
-        logic         sel_pc_4;
+        ex_res_sel_t  ex_res_sel;
         alu_ctrl_t    alu_ctrl;
+        alu_srca_t    alu_srca;
         alu_srcb_t    alu_srcb;
         res_src_t     res_src;
         imm_type_t    imm_type;
@@ -113,14 +125,16 @@ package core_pkg;
         logic [31:0] rs1_data;
         logic [31:0] rs2_data;
         logic [31:0] immediate;
+        logic [31:0] pc;
         logic [31:0] pc_4;
         //Control
         logic        reg_write;
         logic        mem_read;
         logic        mem_write;
         logic [1:0]  mem_size;
-        logic        sel_pc_4;
+        ex_res_sel_t ex_res_sel;
         alu_ctrl_t   alu_ctrl;
+        alu_srca_t   alu_srca;
         alu_srcb_t   alu_srcb;
         res_src_t    res_src;
         //Forwarding

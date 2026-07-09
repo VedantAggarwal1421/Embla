@@ -6,7 +6,6 @@ module branch_unit (
     input  logic                is_jalr,
     input  logic                is_stalled,
     input  logic         [31:0] branch_pc,
-    input  logic         [31:0] rs1_data,        //For JALR
     input  logic         [31:0] branch_offset,
     input  logic         [31:0] rs1,             //Forwarding handled by hazard unit
     input  logic         [31:0] rs2,
@@ -17,7 +16,7 @@ module branch_unit (
 );
 
     logic [31:0]  relative_to;
-    assign relative_to = (is_jalr)? rs1_data: branch_pc;
+    assign relative_to = (is_jalr)? rs1 : branch_pc;
     assign redirect_pc = relative_to + branch_offset;
     logic equal, less_u, less;
     assign equal  = rs1 == rs2;

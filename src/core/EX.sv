@@ -23,13 +23,19 @@ module execute (
     logic [31:0] fwd_a;
     logic [31:0] fwd_b;
 
-    assign alu_a = fwd_a;
-
     // alu_srcb_t alu_src_b_debug;
     // logic [31:0] immediate_debug;
 
     // assign alu_src_b_debug = id_ex.alu_srcb;
     // assign immediate_debug = id_ex.immediate;
+
+    //ALU Source A Mux
+    always_comb begin
+        unique case (id_ex.alu_srca)
+            ALUA_REGISTER:  alu_a = fwd_a;
+            ALUA_PC:        alu_a = id_ex.pc;
+        endcase
+    end
     //ALU Source B MUX
     always_comb begin
         unique case (id_ex.alu_srcb)
@@ -65,8 +71,16 @@ module execute (
         .alu_res(alu_res)
     );
 
+    always_comb begin
+        case (id_ex.ex_res_sel)
+            EX_RES_ALU: ex_mem_d.alu_res = alu_res;
+            EX_RES_PC4: ex_mem_d.alu_res = id_ex.pc_4;
+            EX_RES_IMM: ex_mem_d.alu_res = id_ex.immediate;
+            default:    ex_mem_d.alu_res = alu_res;
+        endcase
+    end
+
     assign ex_mem_d.rd_addr          = id_ex.rd_addr;
-    assign ex_mem_d.alu_res          = (id_ex.sel_pc_4)? id_ex.pc_4 : alu_res;
     assign ex_mem_d.reg_write        = id_ex.reg_write;
     assign ex_mem_d.mem_read         = id_ex.mem_read;
     assign ex_mem_d.mem_write        = id_ex.mem_write;

@@ -126,7 +126,6 @@ module core (
         .is_jalr(is_jalr),
         .is_stalled(stall.if_id),
         .branch_pc(if_id_q.pc),
-        .rs1_data(id_ex_d.rs1_data),
         .branch_offset(id_ex_d.immediate),
         .rs1(branch_op_a),
         .rs2(branch_op_b),
