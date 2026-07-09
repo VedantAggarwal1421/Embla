@@ -85,6 +85,7 @@ module execute (
     assign ex_mem_d.mem_read         = id_ex.mem_read;
     assign ex_mem_d.mem_write        = id_ex.mem_write;
     assign ex_mem_d.res_src          = id_ex.res_src;
+    assign ex_mem_d.load_type        = id_ex.load_type;
 
     assign mem_in_data.mem_addr      = alu_res;
     assign mem_in_data.mem_req_valid = id_ex.mem_read;

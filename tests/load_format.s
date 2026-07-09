@@ -20,4 +20,3 @@ target:
     lh x15, 3(x0)
     lhu x16, 0(x0)
     lhu x17, 3(x0)
-

@@ -36,6 +36,14 @@ package core_pkg;
         GEU
     } branch_comp_t;
 
+    typedef enum logic [2:0] { 
+        LB = 3'b000,
+        LH = 3'b001,
+        LW = 3'b010,
+        LBU = 3'b100,
+        LHU = 3'b101
+    } load_type_t;
+
     typedef enum logic {
         ALUA_REGISTER,
         ALUA_PC
@@ -86,6 +94,26 @@ package core_pkg;
             IMM_J: imm_decode = {{11{instruction[31]}}, instruction[31], instruction[20], instruction[19:12], instruction[30:21], 1'b0};
         endcase
     endfunction
+
+    function automatic logic [31:0] format_load(
+        input logic [31:0] load,
+        input load_type_t load_type,
+        input logic [1:0]  res2Lsb
+    );
+        logic [7:0]  byte_word;
+        logic [15:0] half_word;
+        byte_word = load[8*res2Lsb +: 8];
+        half_word = load[16*res2Lsb[1] +: 16];
+        case (load_type)
+            LB:  format_load = {{24{byte_word[7]}}, byte_word};   // LB
+            LH:  format_load = {{16{half_word[15]}}, half_word};  // LH
+            LW:  format_load = load;                              // LW
+            LBU: format_load = {24'b0, byte_word};                // LBU
+            LHU: format_load = {16'b0, half_word};                // LHU
+            default: format_load = 32'b0;
+        endcase
+    endfunction
+
     //verilog_format: on
 
     typedef struct packed {
@@ -93,6 +121,7 @@ package core_pkg;
         logic         mem_read;
         logic         mem_write;
         logic [1:0]   mem_size;
+        load_type_t   load_type;
         ex_res_sel_t  ex_res_sel;
         alu_ctrl_t    alu_ctrl;
         alu_srca_t    alu_srca;
@@ -132,6 +161,7 @@ package core_pkg;
         logic        mem_read;
         logic        mem_write;
         logic [1:0]  mem_size;
+        load_type_t  load_type;
         ex_res_sel_t ex_res_sel;
         alu_ctrl_t   alu_ctrl;
         alu_srca_t   alu_srca;
@@ -151,6 +181,7 @@ package core_pkg;
         logic        mem_write;
         logic        reg_write;
         res_src_t    res_src;
+        load_type_t   load_type;
         //Forward
         logic [4:0]  rd_addr;
     } ex_mem_t;

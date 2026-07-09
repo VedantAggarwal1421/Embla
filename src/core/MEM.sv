@@ -14,7 +14,7 @@ module memory_access (
 );
     assign mem_stall = (ex_mem.mem_read && ~mem_rdata_ready) || (ex_mem.mem_write && ~mem_wdata_ready);
     assign mem_wb_d.alu_res = ex_mem.alu_res;
-    assign mem_wb_d.mem_rdata = mem_rdata;
+    assign mem_wb_d.mem_rdata = format_load(mem_rdata, ex_mem.load_type, ex_mem.alu_res[1:0]);
     assign mem_wb_d.reg_write = ex_mem.reg_write;
     assign mem_wb_d.rd_addr = ex_mem.rd_addr;
     assign mem_wb_d.res_src = ex_mem.res_src;

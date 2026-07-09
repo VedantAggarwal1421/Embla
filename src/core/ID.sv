@@ -82,6 +82,7 @@ module instruction_decode (
     assign id_ex_d.mem_read = ctrl.mem_read;
     assign id_ex_d.mem_write = ctrl.mem_write;
     assign id_ex_d.mem_size = ctrl.mem_size;
+    assign id_ex_d.load_type = ctrl.load_type;
     assign id_ex_d.ex_res_sel = ctrl.ex_res_sel;
     assign id_ex_d.alu_ctrl = ctrl.alu_ctrl;
     assign id_ex_d.alu_srca = ctrl.alu_srca;

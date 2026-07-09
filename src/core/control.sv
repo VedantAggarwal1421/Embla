@@ -44,7 +44,7 @@ module controller (
                 ctrl.mem_read  = 1;
                 ctrl.alu_srca  = ALUA_REGISTER;
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
-                ctrl.mem_size  = funct3[1:0];
+                ctrl.load_type = load_type_t'(funct3);
                 ctrl.res_src   = RES_MEM;
                 ctrl.imm_type  = IMM_I;
             end
