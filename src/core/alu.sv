@@ -11,7 +11,7 @@ module alu (
         alu_res = '0;
         unique case (alu_ctrl)
             ALU_ADD:  alu_res = alu_a + alu_b;
-            ALU_SUB:  alu_res = alu_a - alu_b;
+            ALU_SUB:  alu_res = alu_a - alu_b;  
             ALU_SLL:  alu_res = alu_a << alu_b[4:0];
             ALU_SLT:  alu_res = {31'b0, $signed(alu_a) < $signed(alu_b)};
             ALU_SLTU: alu_res = {31'b0, alu_a < alu_b};

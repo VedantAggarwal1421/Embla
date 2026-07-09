@@ -66,7 +66,7 @@ module execute (
     );
 
     assign ex_mem_d.rd_addr          = id_ex.rd_addr;
-    assign ex_mem_d.alu_res          = alu_res;
+    assign ex_mem_d.alu_res          = (id_ex.sel_pc_4)? id_ex.pc_4 : alu_res;
     assign ex_mem_d.reg_write        = id_ex.reg_write;
     assign ex_mem_d.mem_read         = id_ex.mem_read;
     assign ex_mem_d.mem_write        = id_ex.mem_write;

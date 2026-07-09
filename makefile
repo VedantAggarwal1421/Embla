@@ -1,7 +1,7 @@
 simulate: sim_compile sim_run
 
 sim_compile:
-	verilator --binary --top-module embla_tb --trace-vcd -f files.f
+	verilator --binary --top-module embla_tb --trace -f files.f
 sim_run:
 	./obj_dir/Vembla_tb
 

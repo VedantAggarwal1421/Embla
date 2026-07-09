@@ -3,7 +3,10 @@ import core_pkg::*;
 module branch_unit (
     input  logic                is_branch,
     input  logic                is_conditional,
+    input  logic                is_jalr,
+    input  logic                is_stalled,
     input  logic         [31:0] branch_pc,
+    input  logic         [31:0] rs1_data,        //For JALR
     input  logic         [31:0] branch_offset,
     input  logic         [31:0] rs1,             //Forwarding handled by hazard unit
     input  logic         [31:0] rs2,
@@ -13,7 +16,9 @@ module branch_unit (
     output logic                branch_flush
 );
 
-    assign redirect_pc = branch_pc + branch_offset;
+    logic [31:0]  relative_to;
+    assign relative_to = (is_jalr)? rs1_data: branch_pc;
+    assign redirect_pc = relative_to + branch_offset;
     logic equal, less_u, less;
     assign equal  = rs1 == rs2;
     assign less_u = rs1 < rs2;
@@ -21,18 +26,23 @@ module branch_unit (
 
     always_comb begin
         redirect_valid = 1'b0;
-        if (is_conditional && is_branch) begin
-            case (br_comp)
-                EQ: redirect_valid = equal;
-                NE: redirect_valid = !equal;
-                LT: redirect_valid = less;
-                GE: redirect_valid = !less;
-                LTU: redirect_valid = less_u;
-                GEU: redirect_valid = !less_u;
-                default: redirect_valid = 1'b0;
-            endcase
-        end else if (is_branch) begin
-            redirect_valid = 1'b1;
+        if(is_stalled) begin
+            redirect_valid = 1'b0;
+        end
+        else begin
+            if (is_conditional && is_branch) begin
+                case (br_comp)
+                    EQ: redirect_valid = equal;
+                    NE: redirect_valid = !equal;
+                    LT: redirect_valid = less;
+                    GE: redirect_valid = !less;
+                    LTU: redirect_valid = less_u;
+                    GEU: redirect_valid = !less_u;
+                    default: redirect_valid = 1'b0;
+                endcase
+            end else if (is_branch) begin
+                redirect_valid = 1'b1;
+            end
         end
     end
 

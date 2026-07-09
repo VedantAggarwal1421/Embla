@@ -82,12 +82,14 @@ package core_pkg;
         logic         mem_read;
         logic         mem_write;
         logic [1:0]   mem_size;
+        logic         sel_pc_4;
         alu_ctrl_t    alu_ctrl;
         alu_srcb_t    alu_srcb;
         res_src_t     res_src;
         imm_type_t    imm_type;
         logic         is_branch;
         logic         is_conditional;
+        logic         is_jalr;
         branch_comp_t br_comp;
     } control_t;
 
@@ -103,6 +105,7 @@ package core_pkg;
     typedef struct packed {
         logic [31:0] pc;
         logic [31:0] instruction;
+        logic [31:0] pc_4;
     } if_id_t;
 
     typedef struct packed {
@@ -110,11 +113,13 @@ package core_pkg;
         logic [31:0] rs1_data;
         logic [31:0] rs2_data;
         logic [31:0] immediate;
+        logic [31:0] pc_4;
         //Control
         logic        reg_write;
         logic        mem_read;
         logic        mem_write;
         logic [1:0]  mem_size;
+        logic        sel_pc_4;
         alu_ctrl_t   alu_ctrl;
         alu_srcb_t   alu_srcb;
         res_src_t    res_src;

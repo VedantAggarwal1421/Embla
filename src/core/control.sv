@@ -58,6 +58,21 @@ module controller (
                     default: ctrl.br_comp = EQ;
                 endcase
             end
+            OPCODE_JAL: begin
+                ctrl.reg_write = 1'b1;
+                ctrl.is_branch = 1'b1;
+                ctrl.imm_type = IMM_J;
+                ctrl.res_src = RES_ALU;
+                ctrl.sel_pc_4 = 1'b1;
+            end
+            OPCODE_JALR: begin
+                ctrl.reg_write = 1'b1;
+                ctrl.res_src = RES_ALU;
+                ctrl.is_branch = 1'b1;
+                ctrl.imm_type = IMM_I;
+                ctrl.sel_pc_4 = 1'b1;
+                ctrl.is_jalr = 1'b1;
+            end
             default: begin
                 ctrl = '0;
             end

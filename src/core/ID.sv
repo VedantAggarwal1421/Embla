@@ -18,6 +18,7 @@ module instruction_decode (
     //Data to branch unit
     output logic is_branch,
     output logic is_conditional,
+    output logic is_jalr,
     output branch_comp_t br_comp
 
 );
@@ -37,6 +38,8 @@ module instruction_decode (
 
     assign id_ex_d.rs1_data = rs1_data;
     assign id_ex_d.rs2_data = rs2_data;
+
+    assign id_ex_d.pc_4 = if_id.pc_4;
 
     //-----Debugging Purpose Only----
     logic [31:0] inst_debug, instpc_debug;
@@ -78,12 +81,14 @@ module instruction_decode (
     assign id_ex_d.mem_read = ctrl.mem_read;
     assign id_ex_d.mem_write = ctrl.mem_write;
     assign id_ex_d.mem_size = ctrl.mem_size;
+    assign id_ex_d.sel_pc_4 = ctrl.sel_pc_4;
     assign id_ex_d.alu_ctrl = ctrl.alu_ctrl;
     assign id_ex_d.alu_srcb = ctrl.alu_srcb;
     assign id_ex_d.res_src = ctrl.res_src;
 
     assign is_branch = ctrl.is_branch;
     assign is_conditional = ctrl.is_conditional;
+    assign is_jalr = ctrl.is_jalr;
     assign br_comp = ctrl.br_comp;
 
 endmodule

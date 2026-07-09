@@ -38,6 +38,7 @@ module core (
 
     logic                is_branch;
     logic                is_conditional;
+    logic                is_jalr;
     branch_comp_t        br_comp;
     logic                redirect_valid;
     logic         [31:0] redirect_pc;
@@ -63,6 +64,7 @@ module core (
         .if_stall      (pipeline_stall || stall.if_id),
         .instruction   (if_id_d.instruction),
         .instruction_pc(if_id_d.pc),
+        .instruction_pc_4(if_id_d.pc_4),
         .redirect_valid(redirect_valid),
         .redirect_pc   (redirect_pc)
     );
@@ -73,7 +75,7 @@ module core (
         if (rst) begin
             if_id_q <= '0;
             //debug_uart <= '0;
-        end else if (branch_flush || br_flush_buff) begin
+        end else if ((branch_flush || br_flush_buff)) begin
             if_id_q <= '0;
         end else if (!pipeline_stall && !stall.if_id) begin
             if_id_q <= if_id_d;
@@ -95,6 +97,7 @@ module core (
         .id_ex_d       (id_ex_d),
         .is_branch     (is_branch),
         .is_conditional(is_conditional),
+        .is_jalr       (is_jalr),
         .br_comp       (br_comp)
     );
 
@@ -120,7 +123,10 @@ module core (
     branch_unit branch_inst (
         .is_branch(is_branch),
         .is_conditional(is_conditional),
+        .is_jalr(is_jalr),
+        .is_stalled(stall.if_id),
         .branch_pc(if_id_q.pc),
+        .rs1_data(id_ex_d.rs1_data),
         .branch_offset(id_ex_d.immediate),
         .rs1(branch_op_a),
         .rs2(branch_op_b),
@@ -240,6 +246,7 @@ module core (
         .id_rs1_addr(id_ex_d.rs1_addr),
         .id_rs2_addr(id_ex_d.rs2_addr),
         .is_conditional(is_conditional),
+        .is_jalr(is_jalr),
         .fwd_a_sel(fwd_a_sel),
         .fwd_b_sel(fwd_b_sel),
         .branch_a_sel(branch_a_sel),

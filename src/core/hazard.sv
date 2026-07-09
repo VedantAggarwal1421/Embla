@@ -13,6 +13,7 @@ module hazard_unit (
     input  logic         [4:0] id_rs1_addr,
     input  logic         [4:0] id_rs2_addr,
     input  logic               is_conditional, //Branch
+    input  logic               is_jalr,
     output forward_sel_t       fwd_a_sel,
     output forward_sel_t       fwd_b_sel,
     output forward_sel_t       branch_a_sel,
@@ -45,7 +46,7 @@ module hazard_unit (
 
     //Forward Branches
     always_comb begin
-        if(is_conditional) begin
+        if(is_conditional || is_jalr) begin
             if (mem_reg_write && (mem_rd_addr != 5'd0) && (mem_rd_addr == id_rs1_addr))
                 branch_a_sel = FWD_MEM;
             else if (wb_reg_write && (wb_rd_addr != 5'd0) && (wb_rd_addr == id_rs1_addr))
@@ -69,7 +70,9 @@ module hazard_unit (
 
     //Stall the pipeline
     always_comb begin
-        if(is_conditional) begin    //Hazards in case of branching
+        stall.if_id = 0;
+        flush.id_ex = 0;
+        if(is_conditional || is_jalr) begin    //Hazards in case of branching
             if((id_rs1_addr == ex_rd_addr) || (id_rs2_addr == ex_rd_addr)) begin //Needed operand in EX stage
                 stall.if_id = 1;
                 flush.id_ex = 1;

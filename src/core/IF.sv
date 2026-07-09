@@ -10,6 +10,7 @@ module instruction_fetch (
 
     output logic [31:0] instruction,
     output logic [31:0] instruction_pc,
+    output logic [31:0] instruction_pc_4,
 
     //Branching
     input logic        redirect_valid,
@@ -21,6 +22,7 @@ module instruction_fetch (
 
     logic [31:0] fetch_buff_instr;
     logic [31:0] fetch_buff_pc;
+    logic [31:0] fetch_buff_pc_4;
     logic        fetch_buff_valid;
 
 
@@ -46,17 +48,20 @@ module instruction_fetch (
         if (rst) begin
             fetch_buff_instr <= 32'b0;
             fetch_buff_pc <= 32'b0;
+            fetch_buff_pc_4 <= 32'b0;
             fetch_buff_valid <= 1'b0;
         end else if (!if_req_valid && if_data_valid) begin
             fetch_buff_instr <= if_data;
             fetch_buff_pc <= old_pc;
+            fetch_buff_pc_4 <= pc;
             fetch_buff_valid <= 1'b1;
-        end else begin
+        end else if(if_req_valid) begin
             fetch_buff_valid <= 1'b0;
         end
     end
 
     assign instruction = (fetch_buff_valid) ? fetch_buff_instr : (if_data_valid) ? if_data : 32'b0;
     assign instruction_pc = (fetch_buff_valid) ? fetch_buff_pc : old_pc;
+    assign instruction_pc_4 = (fetch_buff_valid) ? fetch_buff_pc_4 : pc;
 
 endmodule

@@ -24,7 +24,7 @@ module embla (
             debug_count <= 'd0;
         end else begin
             debug_count <= debug_count + 1;
-            if (~|debug_count) clk_second = ~clk_second;
+            if (~|debug_count) clk_second <= ~clk_second;
         end
     end
 
