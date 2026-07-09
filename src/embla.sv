@@ -48,14 +48,23 @@ module embla (
     logic [31:0] debug_uart;
     logic        uart_en;
 
-    logic [31:0] mem_addr;
-    logic        mem_req_valid;
-    logic [31:0] mem_wdata;
-    logic        mem_we;
-    logic [ 1:0] mem_size;
-    logic        mem_wdata_ready;
-    logic [31:0] mem_rdata;
-    logic        mem_rdata_ready;
+    logic [31:0] lsu_addr;
+    logic        lsu_req_valid;
+    logic [31:0] lsu_wdata;
+    logic        lsu_we;
+    logic [ 1:0] lsu_size;
+    logic        lsu_wdata_ready;
+    logic [31:0] lsu_rdata;
+    logic        lsu_rdata_ready;
+
+    logic [31:0] dmem_addr;
+    logic        dmem_req_valid;
+    logic [31:0] dmem_wdata;
+    logic        dmem_we;
+    logic [ 3:0] dmem_byte_mask;
+    logic        dmem_wdata_ready;
+    logic [31:0] dmem_rdata;
+    logic        dmem_rdata_ready;
 
     core core_inst (
         .clk(clk_second),
@@ -71,15 +80,15 @@ module embla (
         .debug_out(debug_out),
         .debug_uart(debug_uart),
 
-        //Data Memory Interface
-        .mem_addr(mem_addr),
-        .mem_req_valid(mem_req_valid),
-        .mem_wdata(mem_wdata),
-        .mem_we(mem_we),
-        .mem_size(mem_size),
-        .mem_wdata_ready(mem_wdata_ready),
-        .mem_rdata(mem_rdata),
-        .mem_rdata_ready(mem_rdata_ready)
+        //Load Store Unit Interface
+        .lsu_addr(lsu_addr),
+        .lsu_req_valid(lsu_req_valid),
+        .lsu_wdata(lsu_wdata),
+        .lsu_we(lsu_we),
+        .lsu_size(lsu_size),
+        .lsu_wdata_ready(lsu_wdata_ready),
+        .lsu_rdata(lsu_rdata),
+        .lsu_rdata_ready(lsu_rdata_ready)
     );
 
     //Memories
@@ -95,17 +104,40 @@ module embla (
         .stall(if_stall)
     );
 
+    load_store_unit lsu(
+        .clk(clk_second),
+        .rst(rst),
+        
+        .lsu_addr(lsu_addr),
+        .lsu_req_valid(lsu_req_valid),
+        .lsu_wdata(lsu_wdata),
+        .lsu_we(lsu_we),
+        .lsu_size(lsu_size),
+        .lsu_wdata_ready(lsu_wdata_ready),
+        .lsu_rdata(lsu_rdata),
+        .lsu_rdata_ready(lsu_rdata_ready),
+
+        .dmem_addr(dmem_addr),         
+        .dmem_req_valid(dmem_req_valid),    
+        .dmem_wdata(dmem_wdata),        
+        .dmem_we(dmem_we),           
+        .dmem_byte_mask(dmem_byte_mask),    
+        .dmem_wdata_ready(dmem_wdata_ready),  
+        .dmem_rdata(dmem_rdata),        
+        .dmem_rdata_ready(dmem_rdata_ready)
+    );
+
     dmem dmem_inst (
         .clk(clk_second),
         .rst(rst),
-        .addr(mem_addr),
-        .req_valid(mem_req_valid),
-        .wdata(mem_wdata),
-        .we(mem_we),
-        .size(mem_size),
-        .wdata_ready(mem_wdata_ready),
-        .rdata(mem_rdata),
-        .rdata_ready(mem_rdata_ready)
+        .addr(dmem_addr),
+        .req_valid(dmem_req_valid),
+        .wdata(dmem_wdata),
+        .we(dmem_we),
+        .byte_mask(dmem_byte_mask),
+        .wdata_ready(dmem_wdata_ready),
+        .rdata(dmem_rdata),
+        .rdata_ready(dmem_rdata_ready)
     );
 
     //UART MODULE

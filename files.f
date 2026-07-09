@@ -16,5 +16,6 @@ src/core/WB.sv
 src/core/hazard.sv
 src/memory/imem.sv
 src/memory/dmem.sv
+src/memory/load_store_unit.sv
 src/uart/uart_driver.sv
 src/uart/uart_tx.sv

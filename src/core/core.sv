@@ -15,14 +15,14 @@ module core (
     output logic [31:0] debug_uart,
     output logic [31:0] debug_out,
     //Data Memory
-    output logic [31:0] mem_addr,         // Data memory address
-    output logic        mem_req_valid,    // Requesting Data
-    output logic [31:0] mem_wdata,        // Data memory write data
-    output logic        mem_we,           // Data memory write enable
-    output logic [ 1:0] mem_size,         // Data memory size (00=byte, 01=halfword, 10=word)
-    input  logic        mem_wdata_ready,  // Write completed
-    input  logic [31:0] mem_rdata,        // Data memory read data
-    input  logic        mem_rdata_ready   // Data is ready to be read
+    output logic [31:0] lsu_addr,         // Data memory address
+    output logic        lsu_req_valid,    // Requesting Data
+    output logic [31:0] lsu_wdata,        // Data memory write data
+    output logic        lsu_we,           // Data memory write enable
+    output logic [ 1:0] lsu_size,         // Data memory size (00=byte, 01=halfword, 10=word)
+    input  logic        lsu_wdata_ready,  // Write completed
+    input  logic [31:0] lsu_rdata,        // Data memory read data
+    input  logic        lsu_rdata_ready   // Data is ready to be read
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
@@ -170,11 +170,11 @@ module core (
         .mem_in_data (mem_in_data)
     );
 
-    assign mem_addr      = mem_in_data.mem_addr;
-    assign mem_req_valid = mem_in_data.mem_req_valid;
-    assign mem_wdata     = mem_in_data.mem_wdata;
-    assign mem_we        = mem_in_data.mem_we;
-    assign mem_size      = mem_in_data.mem_size;
+    assign lsu_addr      = mem_in_data.mem_addr;
+    assign lsu_req_valid = mem_in_data.mem_req_valid;
+    assign lsu_wdata     = mem_in_data.mem_wdata;
+    assign lsu_we        = mem_in_data.mem_we;
+    assign lsu_size      = mem_in_data.mem_size;
 
     //EX/MEM Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
@@ -196,9 +196,9 @@ module core (
     memory_access mem_inst (
         .clk(clk),
         .rst(rst),
-        .mem_wdata_ready(mem_wdata_ready),
-        .mem_rdata(mem_rdata),
-        .mem_rdata_ready(mem_rdata_ready),
+        .mem_wdata_ready(lsu_wdata_ready),
+        .mem_rdata(lsu_rdata),
+        .mem_rdata_ready(lsu_rdata_ready),
         .mem_stall(mem_stall),
         .ex_mem(ex_mem_q),
         .mem_wb_d(mem_wb_d)
