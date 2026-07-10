@@ -14,11 +14,18 @@ module controller (
 
         case (opcode)
             OPCODE_R: begin
-                ctrl.reg_write = 1;
-                ctrl.alu_srca  = ALUA_REGISTER;
-                ctrl.alu_srcb  = ALUB_REGISTER;
-                ctrl.res_src   = RES_ALU;
-                ctrl.alu_ctrl  = alu_ctrl_t'({funct7[5], funct3});
+                if (funct7[0] == 0) begin
+                    ctrl.reg_write = 1;
+                    ctrl.alu_srca  = ALUA_REGISTER;
+                    ctrl.alu_srcb  = ALUB_REGISTER;
+                    ctrl.res_src   = RES_ALU;
+                    ctrl.alu_ctrl  = alu_ctrl_t'({funct7[5], funct3});
+                end else begin  //MULDIV
+                    ctrl.reg_write   = 1'b1;
+                    ctrl.res_src     = RES_ALU;
+                    ctrl.muldiv_type = muldiv_type_t'(funct3);
+                    ctrl.ex_res_sel  = (funct3[2]) ? EX_RES_DIV : EX_RES_MUL;
+                end
             end
             OPCODE_I: begin
                 ctrl.reg_write = 1;
@@ -38,7 +45,7 @@ module controller (
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
                 ctrl.mem_size  = funct3[1:0];
                 ctrl.imm_type  = IMM_S;
-            end 
+            end
             OPCODE_L: begin
                 ctrl.reg_write = 1;
                 ctrl.mem_read  = 1;
@@ -63,32 +70,32 @@ module controller (
                 endcase
             end
             OPCODE_JAL: begin
-                ctrl.reg_write = 1'b1;
-                ctrl.is_branch = 1'b1;
-                ctrl.imm_type = IMM_J;
-                ctrl.res_src = RES_ALU;
+                ctrl.reg_write  = 1'b1;
+                ctrl.is_branch  = 1'b1;
+                ctrl.imm_type   = IMM_J;
+                ctrl.res_src    = RES_ALU;
                 ctrl.ex_res_sel = EX_RES_PC4;
             end
             OPCODE_JALR: begin
-                ctrl.reg_write = 1'b1;
-                ctrl.res_src = RES_ALU;
-                ctrl.is_branch = 1'b1;
-                ctrl.imm_type = IMM_I;
+                ctrl.reg_write  = 1'b1;
+                ctrl.res_src    = RES_ALU;
+                ctrl.is_branch  = 1'b1;
+                ctrl.imm_type   = IMM_I;
                 ctrl.ex_res_sel = EX_RES_PC4;
-                ctrl.is_jalr = 1'b1;
+                ctrl.is_jalr    = 1'b1;
             end
             OPCODE_LUI: begin
-                ctrl.reg_write = 1'b1;
-                ctrl.res_src = RES_ALU;
-                ctrl.imm_type = IMM_U;
+                ctrl.reg_write  = 1'b1;
+                ctrl.res_src    = RES_ALU;
+                ctrl.imm_type   = IMM_U;
                 ctrl.ex_res_sel = EX_RES_IMM;
             end
             OPCODE_AUIPC: begin
                 ctrl.reg_write = 1'b1;
-                ctrl.res_src = RES_ALU;
-                ctrl.imm_type = IMM_U;
+                ctrl.res_src   = RES_ALU;
+                ctrl.imm_type  = IMM_U;
                 ctrl.alu_srca  = ALUA_PC;
-                ctrl.alu_srcb = ALUB_IMMEDIATE;
+                ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
             default: begin
                 ctrl = '0;

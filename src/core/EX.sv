@@ -23,6 +23,8 @@ module execute (
     logic [31:0] fwd_a;
     logic [31:0] fwd_b;
 
+    logic [31:0] mul_result;
+
     // alu_srcb_t alu_src_b_debug;
     // logic [31:0] immediate_debug;
 
@@ -32,8 +34,8 @@ module execute (
     //ALU Source A Mux
     always_comb begin
         unique case (id_ex.alu_srca)
-            ALUA_REGISTER:  alu_a = fwd_a;
-            ALUA_PC:        alu_a = id_ex.pc;
+            ALUA_REGISTER: alu_a = fwd_a;
+            ALUA_PC:       alu_a = id_ex.pc;
         endcase
     end
     //ALU Source B MUX
@@ -63,7 +65,6 @@ module execute (
         endcase
     end
 
-    //ALU
     alu alu_inst (
         .alu_a(alu_a),
         .alu_b(alu_b),
@@ -71,11 +72,19 @@ module execute (
         .alu_res(alu_res)
     );
 
+    multiply mult_inst (
+        .muldiv_type (id_ex.muldiv_type),
+        .multiplicand(fwd_a),
+        .multiplier  (fwd_b),
+        .mul_result  (mul_result)
+    );
+
     always_comb begin
         case (id_ex.ex_res_sel)
             EX_RES_ALU: ex_mem_d.alu_res = alu_res;
             EX_RES_PC4: ex_mem_d.alu_res = id_ex.pc_4;
             EX_RES_IMM: ex_mem_d.alu_res = id_ex.immediate;
+            EX_RES_MUL: ex_mem_d.alu_res = mul_result;
             default:    ex_mem_d.alu_res = alu_res;
         endcase
     end

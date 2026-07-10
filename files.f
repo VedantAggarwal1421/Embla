@@ -9,6 +9,7 @@ src/core/control.sv
 src/core/branch.sv
 src/core/ID.sv
 src/core/alu.sv
+src/core/multiply.sv
 src/core/EX.sv
 src/core/regfile.sv
 src/core/MEM.sv

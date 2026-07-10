@@ -36,10 +36,10 @@ package core_pkg;
         GEU
     } branch_comp_t;
 
-    typedef enum logic [2:0] { 
-        LB = 3'b000,
-        LH = 3'b001,
-        LW = 3'b010,
+    typedef enum logic [2:0] {
+        LB  = 3'b000,
+        LH  = 3'b001,
+        LW  = 3'b010,
         LBU = 3'b100,
         LHU = 3'b101
     } load_type_t;
@@ -48,7 +48,7 @@ package core_pkg;
         ALUA_REGISTER,
         ALUA_PC
     } alu_srca_t;
-    
+
     typedef enum logic {
         ALUB_REGISTER,
         ALUB_IMMEDIATE
@@ -60,16 +60,30 @@ package core_pkg;
         FWD_WB
     } forward_sel_t;
 
-    typedef enum logic [1:0] { 
+    typedef enum logic [2:0] {
         EX_RES_ALU,
         EX_RES_PC4,
-        EX_RES_IMM
-    } ex_res_sel_t;  //Couldnt come up with a better name. Switches between alu_res , immediate and pc+4
+        EX_RES_IMM,
+        EX_RES_MUL,
+        EX_RES_DIV
+    } ex_res_sel_t
+        ;  //Execute stage result. Treated as alU_res in stages after execute.
 
     typedef enum logic {
         RES_ALU,
         RES_MEM
     } res_src_t;
+
+    typedef enum logic [2:0] {
+        MUL    = 3'b000,
+        MULH   = 3'b001,
+        MULHSU = 3'b010,
+        MULHU  = 3'b011,
+        DIV    = 3'b100,
+        DIVU   = 3'b101,
+        REM    = 3'b110,
+        REMU   = 3'b111
+    } muldiv_type_t;
 
     //Immediates
     typedef enum logic [2:0] {
@@ -117,6 +131,7 @@ package core_pkg;
     //verilog_format: on
 
     typedef struct packed {
+        //Ctrl Signals for RV32I
         logic         reg_write;
         logic         mem_read;
         logic         mem_write;
@@ -132,6 +147,8 @@ package core_pkg;
         logic         is_conditional;
         logic         is_jalr;
         branch_comp_t br_comp;
+        //M Extension
+        muldiv_type_t muldiv_type;
     } control_t;
 
     typedef struct packed {
@@ -151,26 +168,28 @@ package core_pkg;
 
     typedef struct packed {
         //Data
-        logic [31:0] rs1_data;
-        logic [31:0] rs2_data;
-        logic [31:0] immediate;
-        logic [31:0] pc;
-        logic [31:0] pc_4;
-        //Control
-        logic        reg_write;
-        logic        mem_read;
-        logic        mem_write;
-        logic [1:0]  mem_size;
-        load_type_t  load_type;
-        ex_res_sel_t ex_res_sel;
-        alu_ctrl_t   alu_ctrl;
-        alu_srca_t   alu_srca;
-        alu_srcb_t   alu_srcb;
-        res_src_t    res_src;
+        logic [31:0]  rs1_data;
+        logic [31:0]  rs2_data;
+        logic [31:0]  immediate;
+        logic [31:0]  pc;
+        logic [31:0]  pc_4;
+        //Control - RV32I
+        logic         reg_write;
+        logic         mem_read;
+        logic         mem_write;
+        logic [1:0]   mem_size;
+        load_type_t   load_type;
+        ex_res_sel_t  ex_res_sel;
+        alu_ctrl_t    alu_ctrl;
+        alu_srca_t    alu_srca;
+        alu_srcb_t    alu_srcb;
+        res_src_t     res_src;
+        //Control - M
+        muldiv_type_t muldiv_type;
         //Forwarding
-        logic [4:0]  rs1_addr;
-        logic [4:0]  rs2_addr;
-        logic [4:0]  rd_addr;
+        logic [4:0]   rs1_addr;
+        logic [4:0]   rs2_addr;
+        logic [4:0]   rd_addr;
     } id_ex_t;
 
     typedef struct packed {
@@ -181,7 +200,7 @@ package core_pkg;
         logic        mem_write;
         logic        reg_write;
         res_src_t    res_src;
-        load_type_t   load_type;
+        load_type_t  load_type;
         //Forward
         logic [4:0]  rd_addr;
     } ex_mem_t;
