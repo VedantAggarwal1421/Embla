@@ -1,13 +1,13 @@
 // Top module for the Embla SoC. This module instantiates the core and other subsystems.
 `timescale 1ns / 1ns
 module embla (
-    input  wire clk,      // System clock
-    input  wire rst,      // Active high reset
-    input  wire s2,       // Button 2 of fpga. Debugging purposes.  
+    input wire clk,  // System clock
+    input wire rst,  // Active high reset
+    input wire s2,  // Button 2 of fpga. Debugging purposes.  
     output wire uart_tx,  // UART transmit
-    output wire led,      // Represents the slowed down clock. Debugging purposes
-    output wire led2,     // Preserves Debug output
-    input  wire uart_rx   // UART receive
+    output wire led,  // Represents the slowed down clock. Debugging purposes
+    output wire led2,  // Preserves Debug output
+    input wire uart_rx  // UART receive
 );
 
     // ****************** Debugging Infrastructure - Start **********************
@@ -104,10 +104,10 @@ module embla (
         .stall(if_stall)
     );
 
-    load_store_unit lsu(
+    load_store_unit lsu (
         .clk(clk_second),
         .rst(rst),
-        
+
         .lsu_addr(lsu_addr),
         .lsu_req_valid(lsu_req_valid),
         .lsu_wdata(lsu_wdata),
@@ -117,13 +117,13 @@ module embla (
         .lsu_rdata(lsu_rdata),
         .lsu_rdata_ready(lsu_rdata_ready),
 
-        .dmem_addr(dmem_addr),         
-        .dmem_req_valid(dmem_req_valid),    
-        .dmem_wdata(dmem_wdata),        
-        .dmem_we(dmem_we),           
-        .dmem_byte_mask(dmem_byte_mask),    
-        .dmem_wdata_ready(dmem_wdata_ready),  
-        .dmem_rdata(dmem_rdata),        
+        .dmem_addr(dmem_addr),
+        .dmem_req_valid(dmem_req_valid),
+        .dmem_wdata(dmem_wdata),
+        .dmem_we(dmem_we),
+        .dmem_byte_mask(dmem_byte_mask),
+        .dmem_wdata_ready(dmem_wdata_ready),
+        .dmem_rdata(dmem_rdata),
         .dmem_rdata_ready(dmem_rdata_ready)
     );
 

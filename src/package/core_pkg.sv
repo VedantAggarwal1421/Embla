@@ -67,7 +67,7 @@ package core_pkg;
         EX_RES_MUL,
         EX_RES_DIV
     } ex_res_sel_t
-        ;  //Execute stage result. Treated as alU_res in stages after execute.
+        ;  //Execute stage result.Treated as alu_res in stages after execute.
 
     typedef enum logic {
         RES_ALU,

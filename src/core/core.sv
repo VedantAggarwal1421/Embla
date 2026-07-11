@@ -11,23 +11,24 @@ module core (
     input  logic        if_data_valid,  // Instruction fetch data valid
     input  logic        if_stall,
 
-    input  logic        debug_s2,
+    input logic debug_s2,
     output logic [31:0] debug_uart,
     output logic [31:0] debug_out,
     //Data Memory
-    output logic [31:0] lsu_addr,         // Data memory address
-    output logic        lsu_req_valid,    // Requesting Data
-    output logic [31:0] lsu_wdata,        // Data memory write data
-    output logic        lsu_we,           // Data memory write enable
+    output logic [31:0] lsu_addr,  // Data memory address
+    output logic lsu_req_valid,  // Requesting Data
+    output logic [31:0] lsu_wdata,  // Data memory write data
+    output logic lsu_we,  // Data memory write enable
     output logic [ 1:0] lsu_size,         // Data memory size (00=byte, 01=halfword, 10=word)
-    input  logic        lsu_wdata_ready,  // Write completed
-    input  logic [31:0] lsu_rdata,        // Data memory read data
-    input  logic        lsu_rdata_ready   // Data is ready to be read
+    input logic lsu_wdata_ready,  // Write completed
+    input logic [31:0] lsu_rdata,  // Data memory read data
+    input logic lsu_rdata_ready  // Data is ready to be read
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
     logic pipeline_stall;
-    assign pipeline_stall = debug_s2;
+    logic ex_pipe_stall;
+    assign pipeline_stall = ex_pipe_stall;
 
     stall_t              stall;
     flush_t              flush;
@@ -55,18 +56,18 @@ module core (
     if_id_t if_id_q;
 
     instruction_fetch if_inst (
-        .clk           (clk),
-        .rst           (rst),
-        .if_addr       (if_addr),
-        .if_req_valid  (if_req_valid),
-        .if_data       (if_data),
-        .if_data_valid (if_data_valid),
-        .if_stall      (pipeline_stall || stall.if_id),
-        .instruction   (if_id_d.instruction),
-        .instruction_pc(if_id_d.pc),
+        .clk             (clk),
+        .rst             (rst),
+        .if_addr         (if_addr),
+        .if_req_valid    (if_req_valid),
+        .if_data         (if_data),
+        .if_data_valid   (if_data_valid),
+        .if_stall        (pipeline_stall || stall.if_id),
+        .instruction     (if_id_d.instruction),
+        .instruction_pc  (if_id_d.pc),
         .instruction_pc_4(if_id_d.pc_4),
-        .redirect_valid(redirect_valid),
-        .redirect_pc   (redirect_pc)
+        .redirect_valid  (redirect_valid),
+        .redirect_pc     (redirect_pc)
     );
 
     //IF/ID Pipeline Register
@@ -75,7 +76,7 @@ module core (
         if (rst) begin
             if_id_q <= '0;
             //debug_uart <= '0;
-        end else if ((branch_flush || br_flush_buff)) begin
+        end else if ((branch_flush || br_flush_buff) && !pipeline_stall) begin
             if_id_q <= '0;
         end else if (!pipeline_stall && !stall.if_id) begin
             if_id_q <= if_id_d;
@@ -88,24 +89,25 @@ module core (
     id_ex_t id_ex_q;
 
     instruction_decode id_inst (
-        .clk           (clk),
-        .rst           (rst),
-        .if_id         (if_id_q),
-        .rd_data       (rd_data),         //These signals come from write back stage.
-        .rd_addr       (rd_addr),
-        .rd_we         (rd_we),
-        .id_ex_d       (id_ex_d),
-        .is_branch     (is_branch),
+        .clk(clk),
+        .rst(rst),
+        .if_id(if_id_q),
+        .rd_data(rd_data),  //These signals come from write back stage.
+        .rd_addr(rd_addr),
+        .rd_we(rd_we),
+        .pipeline_stalled(pipeline_stall),
+        .id_ex_d(id_ex_d),
+        .is_branch(is_branch),
         .is_conditional(is_conditional),
-        .is_jalr       (is_jalr),
-        .br_comp       (br_comp)
+        .is_jalr(is_jalr),
+        .br_comp(br_comp)
     );
 
     //Branch Unit
     logic [31:0] branch_op_a;
     logic [31:0] branch_op_b;
     always_comb begin
-        case(branch_a_sel)
+        case (branch_a_sel)
             FWD_REG: branch_op_a = id_ex_d.rs1_data;
             FWD_MEM: branch_op_a = ex_mem_q.alu_res;
             FWD_WB:  branch_op_a = rd_data;
@@ -113,7 +115,7 @@ module core (
         endcase
     end
     always_comb begin
-        case(branch_b_sel)
+        case (branch_b_sel)
             FWD_REG: branch_op_b = id_ex_d.rs2_data;
             FWD_MEM: branch_op_b = ex_mem_q.alu_res;
             FWD_WB:  branch_op_b = rd_data;
@@ -141,7 +143,7 @@ module core (
         if (rst) begin
             id_ex_q <= '0;
             //debug_uart <= '0;
-        end else if (flush.id_ex) begin
+        end else if (flush.id_ex && !pipeline_stall) begin
             id_ex_q <= '0;
         end else if (!pipeline_stall) begin
             id_ex_q <= id_ex_d;
@@ -159,15 +161,16 @@ module core (
     forward_sel_t fwd_b_sel;
 
     execute execute_inst (
-        .clk         (clk),
-        .rst         (rst),
-        .id_ex       (id_ex_q),
-        .fwd_a_sel   (fwd_a_sel),
-        .fwd_b_sel   (fwd_b_sel),
-        .fwd_mem_data(ex_mem_q.alu_res),
-        .fwd_wb_data (rd_data),
-        .ex_mem_d    (ex_mem_d),
-        .mem_in_data (mem_in_data)
+        .clk          (clk),
+        .rst          (rst),
+        .id_ex        (id_ex_q),
+        .fwd_a_sel    (fwd_a_sel),
+        .fwd_b_sel    (fwd_b_sel),
+        .fwd_mem_data (ex_mem_q.alu_res),
+        .fwd_wb_data  (rd_data),
+        .ex_pipe_stall(ex_pipe_stall),
+        .ex_mem_d     (ex_mem_d),
+        .mem_in_data  (mem_in_data)
     );
 
     assign lsu_addr      = mem_in_data.mem_addr;

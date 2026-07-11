@@ -12,6 +12,7 @@ module execute (
     input logic [31:0] fwd_mem_data,
     input logic [31:0] fwd_wb_data,
 
+    output logic    ex_pipe_stall,
     output ex_mem_t ex_mem_d,
     output mem_in_data_t mem_in_data
 );
@@ -24,6 +25,11 @@ module execute (
     logic [31:0] fwd_b;
 
     logic [31:0] mul_result;
+    logic [31:0] div_result;
+    logic        div_done;
+    logic        is_div;
+    assign is_div = id_ex.muldiv_type inside {DIV, DIVU, REM, REMU};
+    assign ex_pipe_stall = is_div ^ div_done;
 
     // alu_srcb_t alu_src_b_debug;
     // logic [31:0] immediate_debug;
@@ -79,12 +85,24 @@ module execute (
         .mul_result  (mul_result)
     );
 
+    divide div_inst (
+        .clk(clk),
+        .rst(rst),
+        .is_div(is_div),
+        .div_type(id_ex.muldiv_type),
+        .dividend(fwd_a),
+        .divisor(fwd_b),
+        .result(div_result),
+        .done(div_done)
+    );
+
     always_comb begin
         case (id_ex.ex_res_sel)
             EX_RES_ALU: ex_mem_d.alu_res = alu_res;
             EX_RES_PC4: ex_mem_d.alu_res = id_ex.pc_4;
             EX_RES_IMM: ex_mem_d.alu_res = id_ex.immediate;
             EX_RES_MUL: ex_mem_d.alu_res = mul_result;
+            EX_RES_DIV: ex_mem_d.alu_res = div_result;
             default:    ex_mem_d.alu_res = alu_res;
         endcase
     end

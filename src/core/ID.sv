@@ -11,6 +11,7 @@ module instruction_decode (
     input logic [31:0] rd_data,  // Data to be written to destination register
     input logic [4:0] rd_addr,  //Address of destination register
     input logic rd_we,  // Write enable for the destination register
+    input logic pipeline_stalled,
 
     //Data to ID/EX Pipeline Register
     output id_ex_t id_ex_d,
@@ -55,7 +56,7 @@ module instruction_decode (
         .rs2_addr(rs2_addr),
         .rd_addr(rd_addr),
         .rd_data(rd_data),
-        .rd_we(rd_we),
+        .rd_we(rd_we && !pipeline_stalled),
         .rs1_data(rs1_data),
         .rs2_data(rs2_data)
     );
