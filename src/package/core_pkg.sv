@@ -2,15 +2,16 @@ package core_pkg;
 
     //OPCODES
     typedef enum logic [6:0] {
-        OPCODE_R     = 7'b0110011,
-        OPCODE_I     = 7'b0010011,
-        OPCODE_L     = 7'b0000011,
-        OPCODE_S     = 7'b0100011,
-        OPCODE_B     = 7'b1100011,
-        OPCODE_JAL   = 7'b1101111,
-        OPCODE_JALR  = 7'b1100111,
-        OPCODE_LUI   = 7'b0110111,
-        OPCODE_AUIPC = 7'b0010111
+        OPCODE_R      = 7'b0110011,
+        OPCODE_I      = 7'b0010011,
+        OPCODE_L      = 7'b0000011,
+        OPCODE_S      = 7'b0100011,
+        OPCODE_B      = 7'b1100011,
+        OPCODE_JAL    = 7'b1101111,
+        OPCODE_JALR   = 7'b1100111,
+        OPCODE_LUI    = 7'b0110111,
+        OPCODE_AUIPC  = 7'b0010111,
+        OPCODE_SYSTEM = 7'b1110011
     } opcode_t;
 
     //ALU Control
@@ -149,6 +150,8 @@ package core_pkg;
         branch_comp_t br_comp;
         //M Extension
         muldiv_type_t muldiv_type;
+        //CSR
+        logic         csr_reg_write;
     } control_t;
 
     typedef struct packed {
@@ -173,6 +176,8 @@ package core_pkg;
         logic [31:0]  immediate;
         logic [31:0]  pc;
         logic [31:0]  pc_4;
+        //Data - CSR  
+        logic [31:0]  csr_src_data;
         //Control - RV32I
         logic         reg_write;
         logic         mem_read;
@@ -184,32 +189,43 @@ package core_pkg;
         alu_srca_t    alu_srca;
         alu_srcb_t    alu_srcb;
         res_src_t     res_src;
+        //Control - CSR
+        logic         csr_reg_write;
         //Control - M
         muldiv_type_t muldiv_type;
         //Forwarding
         logic [4:0]   rs1_addr;
         logic [4:0]   rs2_addr;
         logic [4:0]   rd_addr;
+        logic [11:0]  csr_rd_addr;
     } id_ex_t;
 
     typedef struct packed {
         //Data
         logic [31:0] alu_res;
+        //Data - CSR
+        logic [31:0] csr_rd_data;
         //Control
         logic        mem_read;
         logic        mem_write;
         logic        reg_write;
         res_src_t    res_src;
         load_type_t  load_type;
+        //Control - CSR
+        logic        csr_reg_write;
         //Forward
         logic [4:0]  rd_addr;
+        logic [11:0] csr_rd_addr;
     } ex_mem_t;
 
     typedef struct packed {
         logic [31:0] alu_res;
+        logic [31:0] csr_rd_data;
         logic [31:0] mem_rdata;
         logic        reg_write;
         logic [4:0]  rd_addr;
+        logic [11:0] csr_rd_addr;
+        logic        csr_reg_write;
         res_src_t    res_src;
     } mem_wb_t;
 

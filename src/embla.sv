@@ -67,7 +67,7 @@ module embla (
     logic        dmem_rdata_ready;
 
     core core_inst (
-        .clk(clk_second),
+        .clk(clk),
         .rst(rst),
 
         //Instruction Memory Interface
@@ -93,7 +93,7 @@ module embla (
 
     //Memories
     imem imem_inst (
-        .clk(clk_second),
+        .clk(clk),
         .rst(rst),
         .addr(if_addr),
         .req_valid(if_req_valid),
@@ -105,7 +105,7 @@ module embla (
     );
 
     load_store_unit lsu (
-        .clk(clk_second),
+        .clk(clk),
         .rst(rst),
 
         .lsu_addr(lsu_addr),
@@ -128,7 +128,7 @@ module embla (
     );
 
     dmem dmem_inst (
-        .clk(clk_second),
+        .clk(clk),
         .rst(rst),
         .addr(dmem_addr),
         .req_valid(dmem_req_valid),

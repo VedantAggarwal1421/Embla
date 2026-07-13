@@ -23,7 +23,7 @@ module instruction_decode (
     output branch_comp_t br_comp
 
 );
-
+    //Interger Register File
     logic [ 4:0] rs1_addr;
     logic [ 4:0] rs2_addr;
 
@@ -40,7 +40,14 @@ module instruction_decode (
     assign id_ex_d.rs1_data = rs1_data;
     assign id_ex_d.rs2_data = rs2_data;
 
-    assign id_ex_d.pc = if_id.pc;
+    //CSR Register File
+    logic [11:0] csr_src_addr;
+    logic [31:0] csr_src_data;
+
+    assign csr_src_addr = if_id.instruction[31:20];
+
+
+    assign id_ex_d.pc   = if_id.pc;
     assign id_ex_d.pc_4 = if_id.pc_4;
 
     //-----Debugging Purpose Only----
@@ -59,6 +66,16 @@ module instruction_decode (
         .rd_we(rd_we && !pipeline_stalled),
         .rs1_data(rs1_data),
         .rs2_data(rs2_data)
+    );
+
+    csr_file cf_inst (
+        .clk(clk),
+        .rst(rst),
+        .csr_src_addr(csr_src_addr),
+        .csr_rd_addr(12'd0),
+        .csr_rd_data(32'd0),
+        .csr_rd_we(1'b0),
+        .csr_src_data(csr_src_data)
     );
 
     logic [2:0] funct3;

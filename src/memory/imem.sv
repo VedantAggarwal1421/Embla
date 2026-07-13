@@ -39,7 +39,7 @@ module imem (
 
     initial begin
         // Load instructions from a file into the instruction memory
-        $readmemh("src/program.hex", memory);
+        $readmemh("tests/program.hex", memory);
     end
 
     // always @(*) begin
