@@ -20,7 +20,10 @@ module instruction_decode (
     output logic is_branch,
     output logic is_conditional,
     output logic is_jalr,
-    output branch_comp_t br_comp
+    output branch_comp_t br_comp,
+
+    //Data to CSR Unit
+    output csr_in_data_t csr_in_data
 
 );
     //Interger Register File
@@ -40,14 +43,7 @@ module instruction_decode (
     assign id_ex_d.rs1_data = rs1_data;
     assign id_ex_d.rs2_data = rs2_data;
 
-    //CSR Register File
-    logic [11:0] csr_src_addr;
-    logic [31:0] csr_src_data;
-
-    assign csr_src_addr = if_id.instruction[31:20];
-
-
-    assign id_ex_d.pc   = if_id.pc;
+    assign id_ex_d.pc = if_id.pc;
     assign id_ex_d.pc_4 = if_id.pc_4;
 
     //-----Debugging Purpose Only----
@@ -66,16 +62,6 @@ module instruction_decode (
         .rd_we(rd_we && !pipeline_stalled),
         .rs1_data(rs1_data),
         .rs2_data(rs2_data)
-    );
-
-    csr_file cf_inst (
-        .clk(clk),
-        .rst(rst),
-        .csr_src_addr(csr_src_addr),
-        .csr_rd_addr(12'd0),
-        .csr_rd_data(32'd0),
-        .csr_rd_we(1'b0),
-        .csr_src_data(csr_src_data)
     );
 
     logic [2:0] funct3;
@@ -115,5 +101,8 @@ module instruction_decode (
 
     //M Control
     assign id_ex_d.muldiv_type = ctrl.muldiv_type;
+
+    //CSR Unit
+
 
 endmodule

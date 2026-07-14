@@ -61,14 +61,15 @@ package core_pkg;
         FWD_WB
     } forward_sel_t;
 
+    //Execute stage result.Treated as alu_res in stages after execute.
     typedef enum logic [2:0] {
         EX_RES_ALU,
         EX_RES_PC4,
         EX_RES_IMM,
         EX_RES_MUL,
-        EX_RES_DIV
-    } ex_res_sel_t
-        ;  //Execute stage result.Treated as alu_res in stages after execute.
+        EX_RES_DIV,
+        EX_RES_ALU
+    } ex_res_sel_t;
 
     typedef enum logic {
         RES_ALU,
@@ -150,10 +151,9 @@ package core_pkg;
         branch_comp_t br_comp;
         //M Extension
         muldiv_type_t muldiv_type;
-        //CSR
-        logic         csr_reg_write;
     } control_t;
 
+    //Input data to memory system
     typedef struct packed {
         logic [31:0] mem_addr;       // Data memory address
         logic        mem_req_valid;  // Requesting Data
@@ -161,6 +161,15 @@ package core_pkg;
         logic        mem_we;         // Data memory write enable
         logic [1:0]  mem_size;       // Data size
     } mem_in_data_t;
+
+    //Input data to csr system
+    typedef struct packed {
+        logic        valid;
+        logic [2:0]  instr;
+        logic [11:0] src_addr;
+        logic [31:0] data_in;
+        logic [31:0] data_out;
+    } csr_in_data_t;
 
     //Pipeline Registers
     typedef struct packed {
@@ -176,8 +185,6 @@ package core_pkg;
         logic [31:0]  immediate;
         logic [31:0]  pc;
         logic [31:0]  pc_4;
-        //Data - CSR  
-        logic [31:0]  csr_src_data;
         //Control - RV32I
         logic         reg_write;
         logic         mem_read;
@@ -189,43 +196,32 @@ package core_pkg;
         alu_srca_t    alu_srca;
         alu_srcb_t    alu_srcb;
         res_src_t     res_src;
-        //Control - CSR
-        logic         csr_reg_write;
         //Control - M
         muldiv_type_t muldiv_type;
         //Forwarding
         logic [4:0]   rs1_addr;
         logic [4:0]   rs2_addr;
         logic [4:0]   rd_addr;
-        logic [11:0]  csr_rd_addr;
     } id_ex_t;
 
     typedef struct packed {
         //Data
         logic [31:0] alu_res;
-        //Data - CSR
-        logic [31:0] csr_rd_data;
         //Control
         logic        mem_read;
         logic        mem_write;
         logic        reg_write;
         res_src_t    res_src;
         load_type_t  load_type;
-        //Control - CSR
-        logic        csr_reg_write;
         //Forward
         logic [4:0]  rd_addr;
-        logic [11:0] csr_rd_addr;
     } ex_mem_t;
 
     typedef struct packed {
         logic [31:0] alu_res;
-        logic [31:0] csr_rd_data;
         logic [31:0] mem_rdata;
         logic        reg_write;
         logic [4:0]  rd_addr;
-        logic [11:0] csr_rd_addr;
-        logic        csr_reg_write;
         res_src_t    res_src;
     } mem_wb_t;
 

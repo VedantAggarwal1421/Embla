@@ -87,6 +87,7 @@ module core (
     //Instruction Decode
     id_ex_t id_ex_d;
     id_ex_t id_ex_q;
+    csr_in_data_t csr_in_data;
 
     instruction_decode id_inst (
         .clk(clk),
@@ -100,7 +101,8 @@ module core (
         .is_branch(is_branch),
         .is_conditional(is_conditional),
         .is_jalr(is_jalr),
-        .br_comp(br_comp)
+        .br_comp(br_comp),
+        .csr_in_data(csr_in_data)
     );
 
     //Branch Unit
@@ -255,5 +257,11 @@ module core (
         .branch_b_sel(branch_b_sel),
         .stall(stall),
         .flush(flush)
+    );
+
+    csr_unit csr_unit_inst (
+        .clk(clk),
+        .rst(rst),
+
     );
 endmodule

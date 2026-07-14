@@ -97,6 +97,10 @@ module controller (
                 ctrl.alu_srca  = ALUA_PC;
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
+            OPCODE_SYSTEM: begin
+                ctrl.reg_write = 1'b1;
+                ctrl.res_src   = RES_ALU;
+            end
             default: begin
                 ctrl = '0;
             end
