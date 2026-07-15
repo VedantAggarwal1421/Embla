@@ -98,8 +98,11 @@ module controller (
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
             OPCODE_SYSTEM: begin
-                ctrl.reg_write = 1'b1;
-                ctrl.res_src   = RES_ALU;
+                ctrl.reg_write  = 1'b1;
+                ctrl.res_src    = RES_ALU;
+                ctrl.ex_res_sel = EX_RES_CSR;
+                ctrl.imm_type   = IMM_CSR;
+                ctrl.is_csr     = 1'b1;
             end
             default: begin
                 ctrl = '0;

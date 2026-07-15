@@ -50,6 +50,8 @@ module core (
     logic                br_flush_buff;
     always_ff @(posedge clk) br_flush_buff <= branch_flush;
 
+    csr_in_data_t csr_in_data;
+    logic [31:0] csr_out_data;
 
 
     if_id_t if_id_d;
@@ -87,7 +89,6 @@ module core (
     //Instruction Decode
     id_ex_t id_ex_d;
     id_ex_t id_ex_q;
-    csr_in_data_t csr_in_data;
 
     instruction_decode id_inst (
         .clk(clk),
@@ -170,6 +171,7 @@ module core (
         .fwd_b_sel    (fwd_b_sel),
         .fwd_mem_data (ex_mem_q.alu_res),
         .fwd_wb_data  (rd_data),
+        .csr_out_data (csr_out_data),
         .ex_pipe_stall(ex_pipe_stall),
         .ex_mem_d     (ex_mem_d),
         .mem_in_data  (mem_in_data)
@@ -259,9 +261,30 @@ module core (
         .flush(flush)
     );
 
+
+    //CSR Unit
+    logic [31:0] fwd_integer_reg;
+    always_comb begin
+        fwd_integer_reg = id_ex_q.rs1_data;
+        case (fwd_a_sel)
+            FWD_REG: fwd_integer_reg = id_ex_q.rs1_data;
+            FWD_MEM: fwd_integer_reg = ex_mem_q.alu_res;
+            FWD_WB:  fwd_integer_reg = rd_data;
+            default: fwd_integer_reg = id_ex_q.rs1_data;
+        endcase
+    end
+
     csr_unit csr_unit_inst (
         .clk(clk),
         .rst(rst),
-
+        .csr_instr_valid(csr_in_data.valid),
+        .csr_instr(csr_in_data.instr),
+        .csr_src_addr(csr_in_data.src_addr),
+        .immediate_data_in(csr_in_data.immediate),
+        .int_rs1_addr(csr_in_data.rs1_addr),
+        .int_rd_addr(csr_in_data.rd_addr),
+        .int_data_in(fwd_integer_reg),
+        .int_data_out(csr_out_data)
     );
+
 endmodule

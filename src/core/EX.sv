@@ -12,6 +12,8 @@ module execute (
     input logic [31:0] fwd_mem_data,
     input logic [31:0] fwd_wb_data,
 
+    input logic [31:0] csr_out_data,
+
     output logic    ex_pipe_stall,
     output ex_mem_t ex_mem_d,
     output mem_in_data_t mem_in_data
@@ -103,6 +105,7 @@ module execute (
             EX_RES_IMM: ex_mem_d.alu_res = id_ex.immediate;
             EX_RES_MUL: ex_mem_d.alu_res = mul_result;
             EX_RES_DIV: ex_mem_d.alu_res = div_result;
+            EX_RES_CSR: ex_mem_d.alu_res = csr_out_data;
             default:    ex_mem_d.alu_res = alu_res;
         endcase
     end

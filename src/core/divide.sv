@@ -1,3 +1,5 @@
+//TODO: Rewrite this. Implement radix-4 to cut stall time in half.
+//Very high resource utilization, not necessary to have so many registers for everything.
 import core_pkg::*;
 
 module divide (

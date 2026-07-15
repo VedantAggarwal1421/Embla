@@ -12,7 +12,7 @@ module hazard_unit (
     input  logic         [4:0] ex_rd_addr,
     input  logic         [4:0] id_rs1_addr,
     input  logic         [4:0] id_rs2_addr,
-    input  logic               is_conditional, //Branch
+    input  logic               is_conditional,  //Branch
     input  logic               is_jalr,
     output forward_sel_t       fwd_a_sel,
     output forward_sel_t       fwd_b_sel,
@@ -46,7 +46,7 @@ module hazard_unit (
 
     //Forward Branches
     always_comb begin
-        if(is_conditional || is_jalr) begin
+        if (is_conditional || is_jalr) begin
             if (mem_reg_write && (mem_rd_addr != 5'd0) && (mem_rd_addr == id_rs1_addr))
                 branch_a_sel = FWD_MEM;
             else if (wb_reg_write && (wb_rd_addr != 5'd0) && (wb_rd_addr == id_rs1_addr))
@@ -57,7 +57,7 @@ module hazard_unit (
         end else branch_a_sel = FWD_REG;
     end
     always_comb begin
-        if(is_conditional) begin
+        if (is_conditional) begin
             if (mem_reg_write && (mem_rd_addr != 5'd0) && (mem_rd_addr == id_rs2_addr))
                 branch_b_sel = FWD_MEM;
             else if (wb_reg_write && (wb_rd_addr != 5'd0) && (wb_rd_addr == id_rs2_addr))
@@ -72,7 +72,7 @@ module hazard_unit (
     always_comb begin
         stall.if_id = 0;
         flush.id_ex = 0;
-        if(is_conditional || is_jalr) begin    //Hazards in case of branching
+        if (is_conditional || is_jalr) begin  //Hazards in case of branching
             if((id_rs1_addr == ex_rd_addr) || (id_rs2_addr == ex_rd_addr)) begin //Needed operand in EX stage
                 stall.if_id = 1;
                 flush.id_ex = 1;
@@ -81,8 +81,7 @@ module hazard_unit (
                 stall.if_id = 1;
                 flush.id_ex = 1;
             end
-        end
-        else begin
+        end else begin
             if(ex_res_src == RES_MEM && ((id_rs1_addr == ex_rd_addr) || (id_rs2_addr == ex_rd_addr))) begin //Load use hazard
                 stall.if_id = 1;
                 flush.id_ex = 1;

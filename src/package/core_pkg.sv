@@ -68,7 +68,7 @@ package core_pkg;
         EX_RES_IMM,
         EX_RES_MUL,
         EX_RES_DIV,
-        EX_RES_ALU
+        EX_RES_CSR
     } ex_res_sel_t;
 
     typedef enum logic {
@@ -93,7 +93,8 @@ package core_pkg;
         IMM_S,
         IMM_B,
         IMM_U,
-        IMM_J
+        IMM_J,
+        IMM_CSR
     } imm_type_t;
 
     //verilog_format: off
@@ -108,6 +109,7 @@ package core_pkg;
             IMM_B: imm_decode = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
             IMM_U: imm_decode = {instruction[31:12], 12'b0};
             IMM_J: imm_decode = {{11{instruction[31]}}, instruction[31], instruction[20], instruction[19:12], instruction[30:21], 1'b0};
+            IMM_CSR: imm_decode = { 27'b0, instruction[19:15]};
         endcase
     endfunction
 
@@ -151,6 +153,8 @@ package core_pkg;
         branch_comp_t br_comp;
         //M Extension
         muldiv_type_t muldiv_type;
+        //CSR
+        logic         is_csr;
     } control_t;
 
     //Input data to memory system
@@ -167,8 +171,9 @@ package core_pkg;
         logic        valid;
         logic [2:0]  instr;
         logic [11:0] src_addr;
-        logic [31:0] data_in;
-        logic [31:0] data_out;
+        logic [31:0] immediate;
+        logic [4:0]  rs1_addr;
+        logic [4:0]  rd_addr;
     } csr_in_data_t;
 
     //Pipeline Registers

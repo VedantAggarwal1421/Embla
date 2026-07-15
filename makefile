@@ -5,16 +5,23 @@ sim_compile:
 sim_run:
 	./obj_dir/Vembla_tb
 
-build_test: obj bin hex clean
+build_test: elf bin hex clean
 
-obj:
-	riscv64-linux-gnu-as -march=rv32i tests/test.s -o tests/test.o
+elf:
+	riscv64-unknown-elf-gcc \
+    -march=rv32im_zicsr \
+    -mabi=ilp32 \
+    -nostdlib \
+    -nostartfiles \
+    -Ttext=0x0 \
+    tests/test.s \
+    -o tests/test.elf
 bin:
-	riscv64-linux-gnu-objcopy -O binary tests/test.o tests/test.bin
+	riscv64-unknown-elf-objcopy -O binary tests/test.elf tests/test.bin
 hex:
 	hexdump -v -e '1/4 "%08x\n"' tests/test.bin > tests/program.hex
 clean:
-	rm -f tests/test.o tests/test.bin
+	rm -f tests/test.elf tests/test.bin
 
 build_fpga: cl_fp synth pnr gen
 
