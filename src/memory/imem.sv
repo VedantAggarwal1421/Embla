@@ -14,7 +14,7 @@ module imem (
 
     //Later will be implemented in SDRAM, for now we will use BRAM to store instructions for simulation purposes.
     (* ram_style = "block" *)
-    logic [31:0] memory[0:255];
+    logic [31:0] memory[0:1023];
     // 256 x 32-bit instruction memory
 
     always_ff @(posedge clk or posedge rst) begin
@@ -27,12 +27,12 @@ module imem (
             data_valid <= 1'b0;
             stall <= 1'b0;
             if (req_valid) begin
-                data <= memory[addr[9:2]];
+                data <= memory[addr[11:2]];
                 data_valid <= 1'b1;
             end
 
             if (write_enable) begin
-                memory[addr[9:2]] <= write_data;
+                memory[addr[11:2]] <= write_data;
             end
         end
     end

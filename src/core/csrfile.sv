@@ -1,4 +1,5 @@
 /* verilator lint_off CMPCONST */
+import core_pkg::*;
 import csr_pkg::*;
 
 module csr_file (
@@ -11,16 +12,28 @@ module csr_file (
     input logic [31:0] csr_rd_data,
     input logic        csr_rd_we,
 
-    output logic [31:0] csr_src_data
+    output logic [31:0] csr_src_data,
+
+    input  trap_req_t        id_trap_req,
+    output logic             trap_redirect_valid,
+    output logic      [31:0] trap_redirect_pc
 );
 
     logic write_allowed;
     priv_lvl_t cur_priv_lvl, req_priv_lvl;
     assign write_allowed = ~(&csr_src_addr[11:10]);
     assign req_priv_lvl  = priv_lvl_t'(csr_src_addr[9:8]);
-    assign cur_priv_lvl  = PRIV_M;
+    //assign cur_priv_lvl  = PRIV_M;
 
+    logic trap_req;
+    logic trapped;
     logic illegal;
+    assign trap_req = id_trap_req.valid;
+
+    localparam ms_mie = 3;  //M Status Interupt Enable bit
+    localparam ms_mpie = 7;  //M Status previous Interrupt Enable bit
+    localparam ms_mpp_h = 12;  //M Status previous priv lvl msb
+    localparam ms_mpp_l = 11;  //M Status previous priv lvl lsb
 
 
     logic [31:0] mvendorid;
@@ -41,7 +54,7 @@ module csr_file (
 
 
     always_comb begin
-        if (csr_read && cur_priv_lvl >= req_priv_lvl) begin
+        if (csr_read && cur_priv_lvl >= req_priv_lvl && !trap_req) begin
             case (csr_t'(csr_src_addr))
                 MVENDORID: csr_src_data = mvendorid;
                 MARCHID:   csr_src_data = marchid;
@@ -69,8 +82,16 @@ module csr_file (
         end else csr_src_data = 32'b0;
     end
 
-    always_ff @(posedge clk) begin
-        if (csr_rd_we && cur_priv_lvl >= req_priv_lvl && write_allowed) begin
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            cur_priv_lvl               <= PRIV_M;
+            mstatus[ms_mie]            <= 1'b1;
+            mstatus[ms_mpie]           <= 1'b1;
+            mstatus[ms_mpp_h:ms_mpp_l] <= PRIV_M;
+            trapped                    <= 1'b0;
+            mtvec                      <= 32'h100;  //Temporary
+        end
+        else if (csr_rd_we && cur_priv_lvl >= req_priv_lvl && write_allowed && !trap_req) begin
             case (csr_t'(csr_rd_addr))
                 MVENDORID: mvendorid <= csr_rd_data;
                 MARCHID:   marchid <= csr_rd_data;
@@ -95,6 +116,19 @@ module csr_file (
                 MINSTRETH: minstret <= {csr_rd_data, minstret[31:0]};
                 default:   mvendorid <= mvendorid;
             endcase
+        end else if (trap_req) begin
+            trapped <= 1'b1;
+            mepc <= id_trap_req.pc;
+            mcause <= {id_trap_req.is_interrupt, id_trap_req.tcause};
+            mtval <= id_trap_req.tval;
+            cur_priv_lvl <= PRIV_M;
+            mstatus[ms_mie] <= 1'b0;
+            mstatus[ms_mpie] <= mstatus[ms_mie];
+            mstatus[ms_mpp_h:ms_mpp_l] <= cur_priv_lvl;
         end
     end
+
+    assign trap_redirect_valid = trap_req;
+    assign trap_redirect_pc = mtvec;
+
 endmodule

@@ -23,7 +23,8 @@ module instruction_decode (
     output branch_comp_t br_comp,
 
     //Data to CSR Unit
-    output csr_in_data_t csr_in_data
+    output csr_in_data_t csr_in_data,
+    output trap_req_t    id_trap_req
 
 );
     //Interger Register File
@@ -80,34 +81,40 @@ module instruction_decode (
         .ctrl  (ctrl)
     );
 
-    assign id_ex_d.immediate     = imm_decode(ctrl.imm_type, if_id.instruction);
+    assign id_ex_d.immediate = imm_decode(ctrl.imm_type, if_id.instruction);
 
     //RV32I Controls
-    assign id_ex_d.reg_write     = ctrl.reg_write;
-    assign id_ex_d.mem_read      = ctrl.mem_read;
-    assign id_ex_d.mem_write     = ctrl.mem_write;
-    assign id_ex_d.mem_size      = ctrl.mem_size;
-    assign id_ex_d.load_type     = ctrl.load_type;
-    assign id_ex_d.ex_res_sel    = ctrl.ex_res_sel;
-    assign id_ex_d.alu_ctrl      = ctrl.alu_ctrl;
-    assign id_ex_d.alu_srca      = ctrl.alu_srca;
-    assign id_ex_d.alu_srcb      = ctrl.alu_srcb;
-    assign id_ex_d.res_src       = ctrl.res_src;
+    assign id_ex_d.reg_write = ctrl.reg_write;
+    assign id_ex_d.mem_read = ctrl.mem_read;
+    assign id_ex_d.mem_write = ctrl.mem_write;
+    assign id_ex_d.mem_size = ctrl.mem_size;
+    assign id_ex_d.load_type = ctrl.load_type;
+    assign id_ex_d.ex_res_sel = ctrl.ex_res_sel;
+    assign id_ex_d.alu_ctrl = ctrl.alu_ctrl;
+    assign id_ex_d.alu_srca = ctrl.alu_srca;
+    assign id_ex_d.alu_srcb = ctrl.alu_srcb;
+    assign id_ex_d.res_src = ctrl.res_src;
 
-    assign is_branch             = ctrl.is_branch;
-    assign is_conditional        = ctrl.is_conditional;
-    assign is_jalr               = ctrl.is_jalr;
-    assign br_comp               = ctrl.br_comp;
+    assign is_branch = ctrl.is_branch;
+    assign is_conditional = ctrl.is_conditional;
+    assign is_jalr = ctrl.is_jalr;
+    assign br_comp = ctrl.br_comp;
 
     //M Control
-    assign id_ex_d.muldiv_type   = ctrl.muldiv_type;
+    assign id_ex_d.muldiv_type = ctrl.muldiv_type;
 
     //CSR
-    assign csr_in_data.valid     = ctrl.is_csr;
-    assign csr_in_data.instr     = funct3;
-    assign csr_in_data.src_addr  = if_id.instruction[31:20];
+    assign csr_in_data.valid = ctrl.is_csr;
+    assign csr_in_data.instr = funct3;
+    assign csr_in_data.src_addr = if_id.instruction[31:20];
     assign csr_in_data.immediate = id_ex_d.immediate;
-    assign csr_in_data.rs1_addr  = rs1_addr;
-    assign csr_in_data.rd_addr   = if_id.instruction[11:7];
+    assign csr_in_data.rs1_addr = rs1_addr;
+    assign csr_in_data.rd_addr = if_id.instruction[11:7];
+
+    assign id_trap_req.valid = ctrl.trap_req.valid && if_id.instruction_valid;
+    assign id_trap_req.is_interrupt = 1'b0;
+    assign id_trap_req.tcause = ctrl.trap_req.tcause;
+    assign id_trap_req.pc = if_id.pc;
+    assign id_trap_req.tval = if_id.instruction;
 
 endmodule

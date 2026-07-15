@@ -8,6 +8,7 @@ module instruction_fetch (
     input  logic        if_data_valid,  // Instruction fetch data valid
     input  logic        if_stall,
 
+    output logic        instruction_valid,
     output logic [31:0] instruction,
     output logic [31:0] instruction_pc,
     output logic [31:0] instruction_pc_4,
@@ -55,11 +56,12 @@ module instruction_fetch (
             fetch_buff_pc <= old_pc;
             fetch_buff_pc_4 <= pc;
             fetch_buff_valid <= 1'b1;
-        end else if(if_req_valid) begin
+        end else if (if_req_valid) begin
             fetch_buff_valid <= 1'b0;
         end
     end
 
+    assign instruction_valid = (fetch_buff_valid) ? 1'b1 : if_data_valid;
     assign instruction = (fetch_buff_valid) ? fetch_buff_instr : (if_data_valid) ? if_data : 32'b0;
     assign instruction_pc = (fetch_buff_valid) ? fetch_buff_pc : old_pc;
     assign instruction_pc_4 = (fetch_buff_valid) ? fetch_buff_pc_4 : pc;

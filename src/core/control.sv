@@ -105,7 +105,9 @@ module controller (
                 ctrl.is_csr     = 1'b1;
             end
             default: begin
-                ctrl = '0;
+                //Illegal Instruction
+                ctrl.trap_req.valid  = 1'b1;
+                ctrl.trap_req.tcause = EXP_ILLEGAL_INSTR;
             end
         endcase
     end

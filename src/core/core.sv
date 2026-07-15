@@ -37,12 +37,15 @@ module core (
     logic         [ 4:0] rd_addr;
     logic                rd_we;
 
+    logic                redirect_valid;
+    logic         [31:0] redirect_pc;
+
     logic                is_branch;
     logic                is_conditional;
     logic                is_jalr;
     branch_comp_t        br_comp;
-    logic                redirect_valid;
-    logic         [31:0] redirect_pc;
+    logic                branch_redirect_valid;
+    logic         [31:0] branch_redirect_pc;
     forward_sel_t        branch_a_sel;
     forward_sel_t        branch_b_sel;
     logic                branch_flush;
@@ -50,27 +53,52 @@ module core (
     logic                br_flush_buff;
     always_ff @(posedge clk) br_flush_buff <= branch_flush;
 
-    csr_in_data_t csr_in_data;
-    logic [31:0] csr_out_data;
+    csr_in_data_t        csr_in_data;
+    logic         [31:0] csr_out_data;
+    trap_req_t           id_trap_req;
+    logic                trap_redirect_valid;
+    logic         [31:0] trap_redirect_pc;
+    logic                trap_flush;
+    logic                trap_flush_buff;  //Buffer for same reason as branch.
+    always_ff @(posedge clk) trap_flush_buff <= trap_flush;
+    assign trap_flush = trap_redirect_valid;
 
 
     if_id_t if_id_d;
     if_id_t if_id_q;
 
+    always_comb begin
+        if (trap_redirect_valid) begin
+            redirect_valid = 1'b1;
+            redirect_pc    = trap_redirect_pc;
+        end else if (branch_redirect_valid) begin
+            redirect_valid = 1'b1;
+            redirect_pc    = branch_redirect_pc;
+        end else begin
+            redirect_valid = 1'b0;
+            redirect_pc    = 32'b0;
+        end
+    end
+
     instruction_fetch if_inst (
-        .clk             (clk),
-        .rst             (rst),
-        .if_addr         (if_addr),
-        .if_req_valid    (if_req_valid),
-        .if_data         (if_data),
-        .if_data_valid   (if_data_valid),
-        .if_stall        (pipeline_stall || stall.if_id),
-        .instruction     (if_id_d.instruction),
-        .instruction_pc  (if_id_d.pc),
-        .instruction_pc_4(if_id_d.pc_4),
-        .redirect_valid  (redirect_valid),
-        .redirect_pc     (redirect_pc)
+        .clk              (clk),
+        .rst              (rst),
+        .if_addr          (if_addr),
+        .if_req_valid     (if_req_valid),
+        .if_data          (if_data),
+        .if_data_valid    (if_data_valid),
+        .if_stall         (pipeline_stall || stall.if_id),
+        .instruction_valid(if_id_d.instruction_valid),
+        .instruction      (if_id_d.instruction),
+        .instruction_pc   (if_id_d.pc),
+        .instruction_pc_4 (if_id_d.pc_4),
+        .redirect_valid   (redirect_valid),
+        .redirect_pc      (redirect_pc)
     );
+
+    logic if_id_flush;
+    assign if_id_flush = (|{branch_flush, br_flush_buff, trap_flush, trap_flush_buff}) && !pipeline_stall;
+    localparam nop_instr = 32'h00000013;
 
     //IF/ID Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
@@ -78,8 +106,11 @@ module core (
         if (rst) begin
             if_id_q <= '0;
             //debug_uart <= '0;
-        end else if ((branch_flush || br_flush_buff) && !pipeline_stall) begin
-            if_id_q <= '0;
+        end else if (if_id_flush) begin
+            if_id_q.instruction_valid <= if_id_d.instruction_valid;
+            if_id_q.pc                <= if_id_d.pc;
+            if_id_q.instruction       <= nop_instr;
+            if_id_q.pc_4              <= if_id_d.pc_4;
         end else if (!pipeline_stall && !stall.if_id) begin
             if_id_q <= if_id_d;
             //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
@@ -103,7 +134,8 @@ module core (
         .is_conditional(is_conditional),
         .is_jalr(is_jalr),
         .br_comp(br_comp),
-        .csr_in_data(csr_in_data)
+        .csr_in_data(csr_in_data),
+        .id_trap_req(id_trap_req)
     );
 
     //Branch Unit
@@ -135,8 +167,8 @@ module core (
         .rs1(branch_op_a),
         .rs2(branch_op_b),
         .br_comp(br_comp),
-        .redirect_valid(redirect_valid),
-        .redirect_pc(redirect_pc),
+        .redirect_valid(branch_redirect_valid),
+        .redirect_pc(branch_redirect_pc),
         .branch_flush(branch_flush)
     );
 
@@ -146,7 +178,7 @@ module core (
         if (rst) begin
             id_ex_q <= '0;
             //debug_uart <= '0;
-        end else if (flush.id_ex && !pipeline_stall) begin
+        end else if ((flush.id_ex || trap_flush) && !pipeline_stall) begin
             id_ex_q <= '0;
         end else if (!pipeline_stall) begin
             id_ex_q <= id_ex_d;
@@ -284,6 +316,9 @@ module core (
         .int_rs1_addr(csr_in_data.rs1_addr),
         .int_rd_addr(csr_in_data.rd_addr),
         .int_data_in(fwd_integer_reg),
+        .id_trap_req(id_trap_req),
+        .trap_redirect_valid(trap_redirect_valid),
+        .trap_redirect_pc(trap_redirect_pc),
         .int_data_out(csr_out_data)
     );
 

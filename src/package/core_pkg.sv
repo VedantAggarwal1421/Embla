@@ -155,6 +155,7 @@ package core_pkg;
         muldiv_type_t muldiv_type;
         //CSR
         logic         is_csr;
+        trap_req_t    trap_req;
     } control_t;
 
     //Input data to memory system
@@ -178,6 +179,7 @@ package core_pkg;
 
     //Pipeline Registers
     typedef struct packed {
+        logic        instruction_valid;
         logic [31:0] pc;
         logic [31:0] instruction;
         logic [31:0] pc_4;
@@ -245,5 +247,32 @@ package core_pkg;
         logic ex_mem;
         logic mem_wb;
     } flush_t;
+
+    //Privileged Architecture Stuff
+
+    typedef struct packed {
+        logic             valid;
+        logic             is_interrupt;
+        logic [31:0]      pc;            //Instruction PC
+        logic [31:0]      tval;          //Instruction
+        exception_cause_t tcause;
+    } trap_req_t;
+
+    typedef enum logic [30:0] {
+        EXP_INSTR_ADR_MISALIGN = 31'd0,
+        EXP_INSTR_ACC_FAULT    = 31'd1,
+        EXP_ILLEGAL_INSTR      = 31'd2,
+        EXP_BREAKPOINT         = 31'd3,
+        EXP_LOAD_ADR_MISALIGN  = 31'd4,
+        EXP_LOAD_ACC_FAULT     = 31'd5,
+        EXP_STR_ADR_MISALIGN   = 31'd6,
+        EXP_STR_ACC_FAULT      = 31'd7,
+        EXP_ECALL_U            = 31'd8,
+        EXP_ECALL_S            = 31'd9,
+        EXP_ECALL_M            = 31'd11,
+        EXP_INSTR_PG_FAULT     = 31'd12,
+        EXP_LOAD_PG_FAULT      = 31'd13,
+        EXP_STR_PG_FAULT       = 31'd15
+    } exception_cause_t;
 
 endpackage

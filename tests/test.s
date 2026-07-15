@@ -1,147 +1,43 @@
+.section .text
+.globl _start
 
-############################################################
-# Test 1 - CSRRW
-############################################################
+#===========================================================
+# Illegal Instruction Trap Test
+#===========================================================
 
-li      t0, 0x12345678
-csrrw   t1, mscratch, t0
+_start:
 
-# t1 = old mscratch (unknown)
-# mscratch = 0x12345678
+    # Normal instructions
+    li      t0, 0x12345678
+    li      t1, 0xCAFEBABE
+    add     t2, t0, t1
 
-csrr    t2, mscratch
+    #--------------------------------------------------------
+    # Illegal instruction
+    #--------------------------------------------------------
+    .word   0x00000000
 
-# EXPECT:
-# t2 = 0x12345678
-
-
-############################################################
-# Test 2 - CSRRS
-############################################################
-
-li      t0, 0x0000000F
-csrrs   t3, mscratch, t0
-
-# old = 0x12345678
-# new = old | 0xF
-
-csrr    t4, mscratch
-
-# EXPECT
-# t3 = 0x12345678
-# t4 = 0x1234567F
-
-
-############################################################
-# Test 3 - CSRRC
-############################################################
-
-li      t0, 0x0000000C
-csrrc   t5, mscratch, t0
-
-csrr    t6, mscratch
-
-# EXPECT
-# t5 = 0x1234567F
-# t6 = 0x12345673
-
-
-############################################################
-# Test 4 - CSRRWI
-############################################################
-
-csrrwi  s0, mscratch, 21
-
-csrr    s1, mscratch
-
-# EXPECT
-# s1 = 21
-
-
-############################################################
-# Test 5 - CSRRSI
-############################################################
-
-csrsi   mscratch, 10
-
-csrr    s2, mscratch
-
-# EXPECT
-# s2 = 31
-#
-# 21 | 10 = 31
-
-
-############################################################
-# Test 6 - CSRRCI
-############################################################
-
-csrrci  s3, mscratch, 3
-
-csrr    s4, mscratch
-
-# EXPECT
-# s3 = 31
-# s4 = 28
-
-
-############################################################
-# Test 7 - rs1 = x0 (read only)
-############################################################
-
-csrrs   s5, mscratch, x0
-
-# EXPECT
-# s5 = 28
-# mscratch unchanged
-
-
-############################################################
-# Test 8 - CSRRW x0
-############################################################
-
-li      t0, 0xCAFEBABE
-csrrw   x0, mscratch, t0
-
-csrr    s6, mscratch
-
-# EXPECT
-# s6 = 0xCAFEBABE
-
-
-############################################################
-# Test 9 - Read-only CSR
-############################################################
-
-li      t0, 0xFFFFFFFF
-
-csrrw   s7, mvendorid, t0
-
-csrr    s8, mvendorid
-
-# EXPECT
-#
-# mvendorid unchanged.
-#
-# Since no traps yet, just verify it did NOT become
-# 0xFFFFFFFF.
-
-
-############################################################
-# Test 10 - MSTATUS
-############################################################
-
-li      t0, 0xAAAAAAAA
-
-csrw    mstatus, t0
-
-csrr    s9, mstatus
-
-# EXPECT
-# s9 = 0xAAAAAAAA
-
-
-############################################################
+    # Should never execute
+    li      t3, 0xDEADBEEF
 
 end:
     j end
+
+
+#===========================================================
+# Trap Handler (mtvec = 0x100)
+#===========================================================
+
+.org 0x100
+
+trap_handler:
+
+    # Save relevant CSRs into registers for inspection
+    csrr    s0, mepc
+    csrr    s1, mcause
+    csrr    s2, mtval
+    csrr    s3, mstatus
+    csrr    s4, mtvec
+
+trap_loop:
+    j trap_loop

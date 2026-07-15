@@ -1,15 +1,21 @@
+import core_pkg::*;
 import csr_pkg::*;
 
 module csr_unit (  //Manages the csr subsystem
-    input  logic        clk,
-    input  logic        rst,
-    input  logic        csr_instr_valid,
-    input  logic [ 2:0] csr_instr,
-    input  logic [11:0] csr_src_addr,
-    input  logic [31:0] immediate_data_in,
-    input  logic [ 4:0] int_rs1_addr,
-    input  logic [ 4:0] int_rd_addr,
-    input  logic [31:0] int_data_in,
+    input logic        clk,
+    input logic        rst,
+    input logic        csr_instr_valid,
+    input logic [ 2:0] csr_instr,
+    input logic [11:0] csr_src_addr,
+    input logic [31:0] immediate_data_in,
+    input logic [ 4:0] int_rs1_addr,
+    input logic [ 4:0] int_rd_addr,
+    input logic [31:0] int_data_in,
+
+    input  trap_req_t        id_trap_req,
+    output logic             trap_redirect_valid,
+    output logic      [31:0] trap_redirect_pc,
+
     output logic [31:0] int_data_out
 );
 
@@ -51,7 +57,10 @@ module csr_unit (  //Manages the csr subsystem
         .csr_rd_addr(csr_src_addr_q),
         .csr_rd_data(csr_rd_data),
         .csr_rd_we(csr_instr_valid && csr_rd_we),
-        .csr_src_data(csr_src_data)
+        .csr_src_data(csr_src_data),
+        .id_trap_req(id_trap_req),
+        .trap_redirect_valid(trap_redirect_valid),
+        .trap_redirect_pc(trap_redirect_pc)
     );
 
     //Operation
