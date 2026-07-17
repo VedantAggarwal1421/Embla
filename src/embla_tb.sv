@@ -18,8 +18,8 @@ module embla_tb;
     end
 
     embla DUT (
-        .clk(clk),
-        .rst(rst),
+        .sys_clk(clk),
+        .sys_rst(rst),
         .uart_tx(uart_tx),
         .uart_rx(uart_rx),
         .led(led),

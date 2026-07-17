@@ -1,14 +1,28 @@
 // Top module for the Embla SoC. This module instantiates the core and other subsystems.
 `timescale 1ns / 1ns
 module embla (
-    input wire clk,  // System clock
-    input wire rst,  // Active high reset
+    input wire sys_clk,  // System clock
+    input wire sys_rst,  // Active high reset - Hard reset for the entire soc
     input wire s2,  // Button 2 of fpga. Debugging purposes.  
     output wire uart_tx,  // UART transmit
     output wire led,  // Represents the slowed down clock. Debugging purposes
     output wire led2,  // Preserves Debug output
     input wire uart_rx  // UART receive
 );
+
+    logic clk;
+    logic clk_sdram;
+    logic pll_locked;
+    logic rst;
+
+    pll pll_inst (
+        .clkin    (sys_clk),    //Input System Clock 27 Mhz
+        .reset    (rst),        //Reset Pll
+        .clk      (clk),        //Output Clock , set to 27 Mhz for now.
+        .clk_sdram(clk_sdram),  //180 deg Phase shifted clock for sdram.
+        .locked   (pll_locked)  //Pll stable
+    );
+    assign rst = sys_rst || (~pll_locked);  //Hold Reset until pll is stable
 
     // ****************** Debugging Infrastructure - Start **********************
     localparam test = 32'hdeadbeef;
@@ -139,6 +153,8 @@ module embla (
         .rdata(dmem_rdata),
         .rdata_ready(dmem_rdata_ready)
     );
+
+
 
     //UART MODULE
 
