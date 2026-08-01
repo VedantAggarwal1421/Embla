@@ -25,7 +25,8 @@ module sdram_controller #(
     input  logic [ 3:0] byte_mask,    // Data Memory byte mask
     output logic        wdata_ready,  // Data Stored Succesfully
     output logic [31:0] rdata,        // Data memory read data
-    output logic        rdata_ready   // Data is ready to be read   
+    output logic        rdata_ready,  // Data is ready to be read   
+    output logic [ 3:0] debug_led
 
 );
 
@@ -123,6 +124,7 @@ module sdram_controller #(
         .clk(clk),
         .clk_sdram(clk_sdram),
         .rst(rst),
+        .debug_led(debug_led),
 
         .O_sdram_clk(O_sdram_clk),
         .O_sdram_cke(O_sdram_cke),

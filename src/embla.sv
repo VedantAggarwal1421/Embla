@@ -7,7 +7,20 @@ module embla (
     output wire uart_tx,  // UART transmit
     output wire led,  // Represents the slowed down clock. Debugging purposes
     output wire led2,  // Preserves Debug output
-    input wire uart_rx  // UART receive
+    output wire [3:0] debug_led,
+    input wire uart_rx,  // UART receive
+
+    //Interface to sdram
+    output logic        O_sdram_clk,    // Sdram Clock
+    output logic        O_sdram_cke,    // Clock Enable
+    output logic        O_sdram_cs_n,   // Chip select
+    output logic        O_sdram_cas_n,  // Column address select
+    output logic        O_sdram_ras_n,  // Row address select
+    output logic        O_sdram_wen_n,  // Write enable
+    inout  logic [31:0] IO_sdram_dq,    // Input output data from sdram
+    output logic [10:0] O_sdram_addr,   // 11 Bit address (2K Rows)
+    output logic [ 1:0] O_sdram_ba,     // Bank
+    output logic [ 3:0] O_sdram_dqm     // Write Mask
 );
 
     logic clk;
@@ -152,9 +165,35 @@ module embla (
         .uart_en(uart_en)
     );
 
-    dmem dmem_inst (
+    // dmem dmem_inst (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .addr(dmem_addr),
+    //     .req_valid(dmem_req_valid),
+    //     .wdata(dmem_wdata),
+    //     .we(dmem_we),
+    //     .byte_mask(dmem_byte_mask),
+    //     .wdata_ready(dmem_wdata_ready),
+    //     .rdata(dmem_rdata),
+    //     .rdata_ready(dmem_rdata_ready)
+    // );
+
+    sdram_controller sdcnt_inst (
         .clk(clk),
+        .clk_sdram(clk_sdram),
         .rst(rst),
+
+        .O_sdram_clk(O_sdram_clk),    // Sdram Clock
+        .O_sdram_cke(O_sdram_cke),    // Clock Enable
+        .O_sdram_cs_n(O_sdram_cs_n),   // Chip select
+        .O_sdram_cas_n(O_sdram_cas_n),  // Column address select
+        .O_sdram_ras_n(O_sdram_ras_n),  // Row address select
+        .O_sdram_wen_n(O_sdram_wen_n),  // Write enable
+        .IO_sdram_dq(IO_sdram_dq),    // Input output data from sdram
+        .O_sdram_addr(O_sdram_addr),   // 11 Bit address (2K Rows)
+        .O_sdram_ba(O_sdram_ba),     // Bank
+        .O_sdram_dqm(O_sdram_dqm),    // Write Mask
+
         .addr(dmem_addr),
         .req_valid(dmem_req_valid),
         .wdata(dmem_wdata),
@@ -162,7 +201,8 @@ module embla (
         .byte_mask(dmem_byte_mask),
         .wdata_ready(dmem_wdata_ready),
         .rdata(dmem_rdata),
-        .rdata_ready(dmem_rdata_ready)
+        .rdata_ready(dmem_rdata_ready),
+        .debug_led(debug_led)
     );
 
 

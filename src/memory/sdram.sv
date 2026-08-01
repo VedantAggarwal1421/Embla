@@ -5,6 +5,7 @@ module sdram #(
     input logic clk,
     input logic clk_sdram,
     input logic rst,
+    output logic [3:0] debug_led,
 
     //sdram interface
     output logic        O_sdram_clk,    // Sdram Clock
@@ -69,6 +70,9 @@ module sdram #(
     logic [31:0] wr_data_buff;
     logic [22:0] addr_buff;
 
+    logic reached_idle;
+    assign debug_led[2] = ~reached_idle;
+
     typedef enum logic [2:0] {
         SD_INIT,
         SD_CONFIGURE,
@@ -81,7 +85,7 @@ module sdram #(
     state_t state;
     //Main SDRAM state machine
     always @(posedge clk) begin
-        cycle_cnt <= (cycle_cnt == 4'd15)? 4'd15 : 4'd1;
+        cycle_cnt <= (cycle_cnt == 4'd15)? 4'd15 : cycle_cnt + 4'd1;
 
         {O_sdram_ras_n, O_sdram_cas_n, O_sdram_wen_n} <= CMD_NOP;
 
@@ -120,6 +124,7 @@ module sdram #(
             {SD_IDLE, 4'bxxxx}: begin
                 read_ready_sdram <= 1'b0;
                 write_ready_sdram <= 1'b0;
+                reached_idle      <= 1'b1;
 
                 if(read_sdram | write_sdram) begin
                     {O_sdram_ras_n, O_sdram_cas_n, O_sdram_wen_n} <= CMD_BankActivate;
@@ -144,7 +149,7 @@ module sdram #(
             {SD_READ, T_RCD}: begin
                 {O_sdram_ras_n, O_sdram_cas_n, O_sdram_wen_n} <= CMD_Read;
                 O_sdram_addr[10] <= 1'b1;
-                O_sdram_addr[9:0] <= {1'b0, addr_buf[COL_WIDTH-1+2:2]};
+                O_sdram_addr[9:0] <= {1'b0, addr_buff[COL_WIDTH-1+2:2]};
                 O_sdram_dqm       <= 4'b0;
             end
             {SD_READ, T_RCD+CAS}: begin
@@ -156,7 +161,7 @@ module sdram #(
             {SD_WRITE, T_RCD}: begin
                 {O_sdram_ras_n, O_sdram_cas_n, O_sdram_wen_n} <= CMD_Write;
                 O_sdram_addr[10]  <= 1'b1;
-                O_sdram_addr[9:0] <= {1'b0, addr_buf[COL_WIDTH-1+2:2]};
+                O_sdram_addr[9:0] <= {1'b0, addr_buff[COL_WIDTH-1+2:2]};
                 O_sdram_dqm       <= ~byte_mask_sdram;
                 dq_out            <= wr_data_buff;
                 dq_out_en         <= 1'b0;
@@ -183,22 +188,27 @@ module sdram #(
             dq_out_en <= 1'b1;
             O_sdram_dqm <= 4'b0;
             state <= SD_INIT;
+            reached_idle <= 1'b0;
         end
     end
 
     logic [15:0] rst_cnt;
     logic rst_done, rst_done_buf;
 
+    logic config_debug;
+    assign debug_led[3] = ~config_debug;
+
     always @(posedge clk) begin
         rst_done_buf <= rst_done;
         configure    <= rst_done & ~rst_done_buf;
-
+        if(configure) config_debug <= 1'b1;
         if( rst_cnt != FREQ / 1_000_000 * 200) rst_cnt <= rst_cnt + 16'd1;
         else rst_done <= 1'b1;
 
         if(rst) begin
             rst_cnt <= 16'd0;
             rst_done <= 1'b0;
+            config_debug <= 1'b0;
         end
     end
 endmodule
