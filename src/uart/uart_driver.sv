@@ -4,6 +4,7 @@ module uart_driver (
     input logic rst,
     input logic [31:0] tx_word,
     input logic tx_data_valid,
+    output logic uart_busy,
     output logic tx_pin
 );
     parameter CLK_FREQ = 27;  //MHz
@@ -19,6 +20,8 @@ module uart_driver (
     localparam S_SEND = 1;
 
     reg [1:0] state;
+
+    assign uart_busy = ~(state == S_IDLE);
     //verilog_format: off
 
     always @(posedge clk or posedge rst) begin

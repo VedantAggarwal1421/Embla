@@ -1,43 +1,26 @@
-.section .text
-.globl _start
+addi x1, x0, 5
+addi x2, x0, 5
+beq x1, x2, target
+addi x3, x0, 0xFF
 
-#===========================================================
-# Illegal Instruction Trap Test
-#===========================================================
-
-_start:
-
-    # Normal instructions
-    li      t0, 0x12345678
-    li      t1, 0xCAFEBABE
-    add     t2, t0, t1
-
-    #--------------------------------------------------------
-    # Illegal instruction
-    #--------------------------------------------------------
-    .word   0x00000000
-
-    # Should never execute
-    li      t3, 0xDEADBEEF
-
-end:
-    j end
-
-
-#===========================================================
-# Trap Handler (mtvec = 0x100)
-#===========================================================
-
-.org 0x100
-
-trap_handler:
-
-    # Save relevant CSRs into registers for inspection
-    csrr    s0, mepc
-    csrr    s1, mcause
-    csrr    s2, mtval
-    csrr    s3, mstatus
-    csrr    s4, mtvec
-
-trap_loop:
-    j trap_loop
+target:
+    lui x4, 0xf2f4f
+    addi x4, x4, 0x6f8
+    sw x4, 0(x0)
+    lw x5, 0(x0)
+    lb x6, 0(x0)
+    lb x7, 1(x0)
+    lb x8, 2(x0)
+    lb x9, 3(x0)
+    lbu x10, 0(x0)
+    lbu x11, 1(x0)
+    lbu x12, 2(x0)
+    lbu x13, 3(x0)
+    lh x14, 0(x0)
+    lh x15, 3(x0)
+    lhu x16, 0(x0)
+    lhu x17, 3(x0)
+    lui x18, 0x10000
+    sw  x4,  0(x18)
+    sw  x9,  0(x18)
+    sw  x11, 0(x18)

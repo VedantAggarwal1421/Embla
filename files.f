@@ -2,6 +2,7 @@
 
 src/embla.sv
 src/embla_tb.sv
+src/pll_sim.sv
 src/package/core_pkg.sv
 src/package/csr_pkg.sv
 src/core/core.sv

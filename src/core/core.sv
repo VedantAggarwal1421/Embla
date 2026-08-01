@@ -11,24 +11,25 @@ module core (
     input  logic        if_data_valid,  // Instruction fetch data valid
     input  logic        if_stall,
 
-    input logic debug_s2,
+    input  logic        debug_s2,
     output logic [31:0] debug_uart,
     output logic [31:0] debug_out,
     //Data Memory
-    output logic [31:0] lsu_addr,  // Data memory address
-    output logic lsu_req_valid,  // Requesting Data
-    output logic [31:0] lsu_wdata,  // Data memory write data
-    output logic lsu_we,  // Data memory write enable
+    output logic [31:0] lsu_addr,         // Data memory address
+    output logic        lsu_req_valid,    // Requesting Data
+    output logic [31:0] lsu_wdata,        // Data memory write data
+    output logic        lsu_we,           // Data memory write enable
     output logic [ 1:0] lsu_size,         // Data memory size (00=byte, 01=halfword, 10=word)
-    input logic lsu_wdata_ready,  // Write completed
-    input logic [31:0] lsu_rdata,  // Data memory read data
-    input logic lsu_rdata_ready  // Data is ready to be read
+    input  logic        lsu_wdata_ready,  // Write completed
+    input  logic [31:0] lsu_rdata,        // Data memory read data
+    input  logic        lsu_rdata_ready   // Data is ready to be read
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
     logic pipeline_stall;
     logic ex_pipe_stall;
-    assign pipeline_stall = ex_pipe_stall;
+    logic mem_pipe_stall;
+    assign pipeline_stall = ex_pipe_stall | mem_pipe_stall;
 
     stall_t              stall;
     flush_t              flush;
@@ -205,15 +206,8 @@ module core (
         .fwd_wb_data  (rd_data),
         .csr_out_data (csr_out_data),
         .ex_pipe_stall(ex_pipe_stall),
-        .ex_mem_d     (ex_mem_d),
-        .mem_in_data  (mem_in_data)
+        .ex_mem_d     (ex_mem_d)
     );
-
-    assign lsu_addr      = mem_in_data.mem_addr;
-    assign lsu_req_valid = mem_in_data.mem_req_valid;
-    assign lsu_wdata     = mem_in_data.mem_wdata;
-    assign lsu_we        = mem_in_data.mem_we;
-    assign lsu_size      = mem_in_data.mem_size;
 
     //EX/MEM Pipeline Register
     always_ff @(posedge clk or posedge rst) begin
@@ -228,9 +222,15 @@ module core (
     end
 
     //Memory Access Stage
+
+    assign lsu_addr      = ex_mem_q.mem_in_data.mem_addr;
+    assign lsu_req_valid = ex_mem_q.mem_in_data.mem_req_valid;
+    assign lsu_wdata     = ex_mem_q.mem_in_data.mem_wdata;
+    assign lsu_we        = ex_mem_q.mem_in_data.mem_we;
+    assign lsu_size      = ex_mem_q.mem_in_data.mem_size;
+
     mem_wb_t mem_wb_d;
     mem_wb_t mem_wb_q;
-    logic mem_stall;
 
     memory_access mem_inst (
         .clk(clk),
@@ -238,7 +238,7 @@ module core (
         .mem_wdata_ready(lsu_wdata_ready),
         .mem_rdata(lsu_rdata),
         .mem_rdata_ready(lsu_rdata_ready),
-        .mem_stall(mem_stall),
+        .mem_stall(mem_pipe_stall),
         .ex_mem(ex_mem_q),
         .mem_wb_d(mem_wb_d)
     );

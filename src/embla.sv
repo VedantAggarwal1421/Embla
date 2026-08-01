@@ -17,12 +17,16 @@ module embla (
 
     pll pll_inst (
         .clkin    (sys_clk),    //Input System Clock 27 Mhz
-        .reset    (rst),        //Reset Pll
+        .reset    (sys_rst),    //Reset Pll
         .clk      (clk),        //Output Clock , set to 27 Mhz for now.
         .clk_sdram(clk_sdram),  //180 deg Phase shifted clock for sdram.
         .locked   (pll_locked)  //Pll stable
     );
-    assign rst = sys_rst || (~pll_locked);  //Hold Reset until pll is stable
+
+    assign rst = sys_rst || (~pll_locked);  //Assert Reset until pll is stable
+
+    // assign clk = sys_clk;
+    // assign rst = sys_rst;
 
     // ****************** Debugging Infrastructure - Start **********************
     localparam test = 32'hdeadbeef;
@@ -60,7 +64,6 @@ module embla (
     logic        if_stall;
 
     logic [31:0] debug_uart;
-    logic        uart_en;
 
     logic [31:0] lsu_addr;
     logic        lsu_req_valid;
@@ -79,6 +82,10 @@ module embla (
     logic        dmem_wdata_ready;
     logic [31:0] dmem_rdata;
     logic        dmem_rdata_ready;
+
+    logic [31:0] uart_out_data;
+    logic        uart_busy;
+    logic        uart_en;
 
     core core_inst (
         .clk(clk),
@@ -138,7 +145,11 @@ module embla (
         .dmem_byte_mask(dmem_byte_mask),
         .dmem_wdata_ready(dmem_wdata_ready),
         .dmem_rdata(dmem_rdata),
-        .dmem_rdata_ready(dmem_rdata_ready)
+        .dmem_rdata_ready(dmem_rdata_ready),
+
+        .uart_busy(uart_busy),
+        .uart_out_data(uart_out_data),
+        .uart_en(uart_en)
     );
 
     dmem dmem_inst (
@@ -158,11 +169,22 @@ module embla (
 
     //UART MODULE
 
+    // uart_driver uart_inst (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .tx_word(debug_uart),
+    //     .tx_data_valid(rise),
+    //     .tx_pin(uart_tx)
+    // );
+
     uart_driver uart_inst (
         .clk(clk),
         .rst(rst),
-        .tx_word(debug_uart),
-        .tx_data_valid(rise),
+        .tx_word(uart_out_data),
+        .tx_data_valid(uart_en),
+        .uart_busy(uart_busy),
         .tx_pin(uart_tx)
     );
+
+
 endmodule

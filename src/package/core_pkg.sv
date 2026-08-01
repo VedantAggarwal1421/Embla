@@ -134,6 +134,35 @@ package core_pkg;
 
     //verilog_format: on
 
+    //Privileged Architecture Stuff
+
+    typedef enum logic [30:0] {
+        EXP_INSTR_ADR_MISALIGN = 31'd0,
+        EXP_INSTR_ACC_FAULT    = 31'd1,
+        EXP_ILLEGAL_INSTR      = 31'd2,
+        EXP_BREAKPOINT         = 31'd3,
+        EXP_LOAD_ADR_MISALIGN  = 31'd4,
+        EXP_LOAD_ACC_FAULT     = 31'd5,
+        EXP_STR_ADR_MISALIGN   = 31'd6,
+        EXP_STR_ACC_FAULT      = 31'd7,
+        EXP_ECALL_U            = 31'd8,
+        EXP_ECALL_S            = 31'd9,
+        EXP_ECALL_M            = 31'd11,
+        EXP_INSTR_PG_FAULT     = 31'd12,
+        EXP_LOAD_PG_FAULT      = 31'd13,
+        EXP_STR_PG_FAULT       = 31'd15
+    } exception_cause_t;
+
+    typedef struct packed {
+        logic             valid;
+        logic             is_interrupt;
+        logic [31:0]      pc;            //Instruction PC
+        logic [31:0]      tval;          //Instruction
+        exception_cause_t tcause;
+    } trap_req_t;
+
+    //Core Stuff
+
     typedef struct packed {
         //Ctrl Signals for RV32I
         logic         reg_write;
@@ -213,15 +242,16 @@ package core_pkg;
 
     typedef struct packed {
         //Data
-        logic [31:0] alu_res;
+        logic [31:0]  alu_res;
+        mem_in_data_t mem_in_data;
         //Control
-        logic        mem_read;
-        logic        mem_write;
-        logic        reg_write;
-        res_src_t    res_src;
-        load_type_t  load_type;
+        logic         mem_read;
+        logic         mem_write;
+        logic         reg_write;
+        res_src_t     res_src;
+        load_type_t   load_type;
         //Forward
-        logic [4:0]  rd_addr;
+        logic [4:0]   rd_addr;
     } ex_mem_t;
 
     typedef struct packed {
@@ -248,31 +278,6 @@ package core_pkg;
         logic mem_wb;
     } flush_t;
 
-    //Privileged Architecture Stuff
 
-    typedef struct packed {
-        logic             valid;
-        logic             is_interrupt;
-        logic [31:0]      pc;            //Instruction PC
-        logic [31:0]      tval;          //Instruction
-        exception_cause_t tcause;
-    } trap_req_t;
-
-    typedef enum logic [30:0] {
-        EXP_INSTR_ADR_MISALIGN = 31'd0,
-        EXP_INSTR_ACC_FAULT    = 31'd1,
-        EXP_ILLEGAL_INSTR      = 31'd2,
-        EXP_BREAKPOINT         = 31'd3,
-        EXP_LOAD_ADR_MISALIGN  = 31'd4,
-        EXP_LOAD_ACC_FAULT     = 31'd5,
-        EXP_STR_ADR_MISALIGN   = 31'd6,
-        EXP_STR_ACC_FAULT      = 31'd7,
-        EXP_ECALL_U            = 31'd8,
-        EXP_ECALL_S            = 31'd9,
-        EXP_ECALL_M            = 31'd11,
-        EXP_INSTR_PG_FAULT     = 31'd12,
-        EXP_LOAD_PG_FAULT      = 31'd13,
-        EXP_STR_PG_FAULT       = 31'd15
-    } exception_cause_t;
 
 endpackage
