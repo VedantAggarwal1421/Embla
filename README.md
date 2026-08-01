@@ -4,7 +4,7 @@
 
 ---
 
-> 🚧 **Status: Early development.** This README describes the planned architecture and will evolve as the project progresses.
+> 🚧 **Status: Mid development.** This README describes the planned architecture and will evolve as the project progresses.
 
 ## About
 
@@ -24,7 +24,8 @@ Embla is a from-scratch RISC-V System-on-Chip targeting FPGA, built as a deep di
 
 - [ ] Core (fetch → decode → execute → memory → writeback)
 - - [x] RV32I Pipelined Cpu
-- - [ ] M/A Extensions
+- - [x] M Extension
+- - [ ] A Extension
 - [ ] UART
 - - [x] Debug transmitter
 - - [ ] UART 16550
@@ -32,10 +33,11 @@ Embla is a from-scratch RISC-V System-on-Chip targeting FPGA, built as a deep di
 - [ ] MMU (Sv32, TLB, page table walker)
 - [ ] Caches (I-cache, D-cache)
 - [ ] AXI4 interconnect
-- [ ] SDRAM controller
+- Will probably drop this. Not required for current scope of the project.
+- [x] SDRAM controller
 - [ ] Boot Linux
 ---
 
 *Progress, notes, and write-ups will be added here as development continues.*
-- Working on setting up formal verification for the cpu.
+- Implementing Privileged Architecture.
 - Developing the MMU.
