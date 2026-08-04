@@ -161,6 +161,8 @@ package core_pkg;
         exception_cause_t tcause;
     } trap_req_t;
 
+    typedef struct packed {logic is_mret;} sys_instr_t;
+
     //Core Stuff
 
     typedef struct packed {
@@ -184,6 +186,7 @@ package core_pkg;
         muldiv_type_t muldiv_type;
         //CSR
         logic         is_csr;
+        logic         is_mret;
         trap_req_t    trap_req;
     } control_t;
 

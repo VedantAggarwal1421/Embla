@@ -1,12 +1,18 @@
 import core_pkg::*;
 
 module controller (
-    input logic [2:0] funct3,
-    input logic [6:0] funct7,
-    input opcode_t opcode,
-
+    input logic [31:0] instruction,
     output control_t ctrl
 );
+    logic [2:0] funct3;
+    logic [6:0] funct7;
+    logic [11:0] funct12;
+    opcode_t opcode;
+
+    assign funct3  = instruction[14:12];
+    assign funct7  = instruction[31:25];
+    assign funct12 = instruction[31:20];
+    assign opcode  = opcode_t'(instruction[6:0]);
 
     //Main Decoder
     always_comb begin
@@ -98,11 +104,14 @@ module controller (
                 ctrl.alu_srcb  = ALUB_IMMEDIATE;
             end
             OPCODE_SYSTEM: begin
-                ctrl.reg_write  = 1'b1;
-                ctrl.res_src    = RES_ALU;
-                ctrl.ex_res_sel = EX_RES_CSR;
-                ctrl.imm_type   = IMM_CSR;
-                ctrl.is_csr     = 1'b1;
+                ctrl.is_mret = (funct3 == 3'b000) && (funct12 == 12'b001100000010);
+                if (!ctrl.is_mret) begin
+                    ctrl.reg_write  = 1'b1;
+                    ctrl.res_src    = RES_ALU;
+                    ctrl.ex_res_sel = EX_RES_CSR;
+                    ctrl.imm_type   = IMM_CSR;
+                    ctrl.is_csr     = 1'b1;
+                end
             end
             default: begin
                 //Illegal Instruction

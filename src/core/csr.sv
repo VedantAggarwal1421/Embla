@@ -12,9 +12,11 @@ module csr_unit (  //Manages the csr subsystem
     input logic [ 4:0] int_rd_addr,
     input logic [31:0] int_data_in,
 
-    input  trap_req_t        id_trap_req,
-    output logic             trap_redirect_valid,
-    output logic      [31:0] trap_redirect_pc,
+    input  trap_req_t         id_trap_req,
+    input  sys_instr_t        sys_instr,
+    output logic              trap_redirect_valid,
+    output logic       [31:0] trap_redirect_pc,
+    output logic              csr_stall_if_id,
 
     output logic [31:0] int_data_out
 );
@@ -56,11 +58,13 @@ module csr_unit (  //Manages the csr subsystem
         .csr_src_addr(csr_src_addr_q),
         .csr_rd_addr(csr_src_addr_q),
         .csr_rd_data(csr_rd_data),
-        .csr_rd_we(csr_instr_valid && csr_rd_we),
+        .csr_rd_we(csr_instr_valid_q && csr_rd_we),
         .csr_src_data(csr_src_data),
+        .sys_instr(sys_instr),
         .id_trap_req(id_trap_req),
         .trap_redirect_valid(trap_redirect_valid),
-        .trap_redirect_pc(trap_redirect_pc)
+        .trap_redirect_pc(trap_redirect_pc),
+        .csr_stall_if_id(csr_stall_if_id)
     );
 
     //Operation

@@ -56,9 +56,11 @@ module core (
 
     csr_in_data_t        csr_in_data;
     logic         [31:0] csr_out_data;
+    sys_instr_t          sys_instr;
     trap_req_t           id_trap_req;
     logic                trap_redirect_valid;
     logic         [31:0] trap_redirect_pc;
+    logic                csr_stall_if_id;
     logic                trap_flush;
     logic                trap_flush_buff;  //Buffer for same reason as branch.
     always_ff @(posedge clk) trap_flush_buff <= trap_flush;
@@ -88,7 +90,7 @@ module core (
         .if_req_valid     (if_req_valid),
         .if_data          (if_data),
         .if_data_valid    (if_data_valid),
-        .if_stall         (pipeline_stall || stall.if_id),
+        .if_stall         (pipeline_stall || stall.if_id || csr_stall_if_id),
         .instruction_valid(if_id_d.instruction_valid),
         .instruction      (if_id_d.instruction),
         .instruction_pc   (if_id_d.pc),
@@ -112,7 +114,7 @@ module core (
             if_id_q.pc                <= if_id_d.pc;
             if_id_q.instruction       <= nop_instr;
             if_id_q.pc_4              <= if_id_d.pc_4;
-        end else if (!pipeline_stall && !stall.if_id) begin
+        end else if (!pipeline_stall && !stall.if_id && !csr_stall_if_id) begin
             if_id_q <= if_id_d;
             //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
         end
@@ -136,6 +138,7 @@ module core (
         .is_jalr(is_jalr),
         .br_comp(br_comp),
         .csr_in_data(csr_in_data),
+        .sys_instr(sys_instr),
         .id_trap_req(id_trap_req)
     );
 
@@ -317,8 +320,10 @@ module core (
         .int_rd_addr(csr_in_data.rd_addr),
         .int_data_in(fwd_integer_reg),
         .id_trap_req(id_trap_req),
+        .sys_instr(sys_instr),
         .trap_redirect_valid(trap_redirect_valid),
         .trap_redirect_pc(trap_redirect_pc),
+        .csr_stall_if_id(csr_stall_if_id),
         .int_data_out(csr_out_data)
     );
 

@@ -24,6 +24,7 @@ module instruction_decode (
 
     //Data to CSR Unit
     output csr_in_data_t csr_in_data,
+    output sys_instr_t   sys_instr,
     output trap_req_t    id_trap_req
 
 );
@@ -75,10 +76,8 @@ module instruction_decode (
     assign opcode = opcode_t'(if_id.instruction[6:0]);
 
     controller ctrl_inst (
-        .funct3(funct3),
-        .funct7(funct7),
-        .opcode(opcode),
-        .ctrl  (ctrl)
+        .instruction(if_id.instruction),
+        .ctrl(ctrl)
     );
 
     assign id_ex_d.immediate = imm_decode(ctrl.imm_type, if_id.instruction);
@@ -116,5 +115,7 @@ module instruction_decode (
     assign id_trap_req.tcause = ctrl.trap_req.tcause;
     assign id_trap_req.pc = if_id.pc;
     assign id_trap_req.tval = if_id.instruction;
+
+    assign sys_instr.is_mret = ctrl.is_mret;
 
 endmodule
