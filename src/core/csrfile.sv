@@ -14,8 +14,9 @@ module csr_file (
 
     output logic [31:0] csr_src_data,
 
-    input  sys_instr_t        sys_instr,
     input  trap_req_t         id_trap_req,
+    input  sys_instr_t        sys_instr,
+    input  logic              pipeline_stall,
     output logic              trap_redirect_valid,
     output logic       [31:0] trap_redirect_pc,
     output logic              csr_stall_if_id
@@ -126,7 +127,7 @@ module csr_file (
                 MINSTRETH: minstret <= {csr_rd_data, minstret[31:0]};
                 default:   mvendorid <= mvendorid;
             endcase
-        end else if (trap_req && !csr_stall_if_id) begin
+        end else if (trap_req && !csr_stall_if_id && !pipeline_stall) begin
             trapped <= 1'b1;
             mepc <= id_trap_req.pc;
             mcause <= {id_trap_req.is_interrupt, id_trap_req.tcause};
@@ -135,7 +136,7 @@ module csr_file (
             mstatus[ms_mie] <= 1'b0;
             mstatus[ms_mpie] <= mstatus[ms_mie];
             mstatus[ms_mpp_h:ms_mpp_l] <= cur_priv_lvl;
-        end else if (ex_sys_instr && !csr_stall_if_id) begin
+        end else if (ex_sys_instr && !csr_stall_if_id && !pipeline_stall) begin
             if (sys_instr.is_mret) begin  //Return from trap
                 trapped <= 1'b0;
                 cur_priv_lvl <= priv_lvl_t'(mstatus[ms_mpp_h:ms_mpp_l]);
@@ -146,7 +147,7 @@ module csr_file (
         end
     end
 
-    assign trap_redirect_valid = (trap_req || sys_instr.is_mret) && !csr_stall_if_id;
+    assign trap_redirect_valid = (trap_req || sys_instr.is_mret) && !csr_stall_if_id && !pipeline_stall;
     // always_comb begin
     //     if (sys_instr.is_mret) begin
     //         if (csr_rd_we == 1'b1 && csr_rd_addr == MEPC) begin  //Writing to mepc

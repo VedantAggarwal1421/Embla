@@ -52,7 +52,9 @@ module core (
     logic                branch_flush;
     //Buffering Branch Flush to account for synchronous mem.
     logic                br_flush_buff;
-    always_ff @(posedge clk) br_flush_buff <= branch_flush;
+    always_ff @(posedge clk) begin
+        if (!pipeline_stall) br_flush_buff <= branch_flush;
+    end
 
     csr_in_data_t        csr_in_data;
     logic         [31:0] csr_out_data;
@@ -63,7 +65,9 @@ module core (
     logic                csr_stall_if_id;
     logic                trap_flush;
     logic                trap_flush_buff;  //Buffer for same reason as branch.
-    always_ff @(posedge clk) trap_flush_buff <= trap_flush;
+    always_ff @(posedge clk) begin
+        if (!pipeline_stall) trap_flush_buff <= trap_flush;
+    end
     assign trap_flush = trap_redirect_valid;
 
 
@@ -321,6 +325,7 @@ module core (
         .int_data_in(fwd_integer_reg),
         .id_trap_req(id_trap_req),
         .sys_instr(sys_instr),
+        .pipeline_stall(pipeline_stall),
         .trap_redirect_valid(trap_redirect_valid),
         .trap_redirect_pc(trap_redirect_pc),
         .csr_stall_if_id(csr_stall_if_id),

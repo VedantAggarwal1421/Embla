@@ -14,6 +14,7 @@ module csr_unit (  //Manages the csr subsystem
 
     input  trap_req_t         id_trap_req,
     input  sys_instr_t        sys_instr,
+    input  logic              pipeline_stall,
     output logic              trap_redirect_valid,
     output logic       [31:0] trap_redirect_pc,
     output logic              csr_stall_if_id,
@@ -36,7 +37,7 @@ module csr_unit (  //Manages the csr subsystem
             immediate_q       <= '0;
             rs1_addr_q        <= '0;
             rd_addr_q         <= '0;
-        end else begin
+        end else if (!pipeline_stall) begin
             csr_instr_valid_q <= csr_instr_valid;
             csr_instr_q       <= csr_instr;
             csr_src_addr_q    <= csr_src_addr;
@@ -60,8 +61,9 @@ module csr_unit (  //Manages the csr subsystem
         .csr_rd_data(csr_rd_data),
         .csr_rd_we(csr_instr_valid_q && csr_rd_we),
         .csr_src_data(csr_src_data),
-        .sys_instr(sys_instr),
         .id_trap_req(id_trap_req),
+        .sys_instr(sys_instr),
+        .pipeline_stall(pipeline_stall),
         .trap_redirect_valid(trap_redirect_valid),
         .trap_redirect_pc(trap_redirect_pc),
         .csr_stall_if_id(csr_stall_if_id)
