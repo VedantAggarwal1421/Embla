@@ -28,6 +28,8 @@ module instruction_decode (
     output trap_req_t    id_trap_req
 
 );
+
+    assign id_ex_d.instruction_valid = if_id.instruction_valid;
     //Interger Register File
     logic [ 4:0] rs1_addr;
     logic [ 4:0] rs2_addr;

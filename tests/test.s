@@ -5,7 +5,7 @@
 
 _start:
     li      x1, 1
-    li      x31, 0x10000000
+    li      x31, 0x00000000
 
 illegal_here:
     addi    x2, x2, 0xFF          # <-- Manually corrupting this instruction.

@@ -18,6 +18,8 @@ module execute (
     output ex_mem_t ex_mem_d
 );
 
+    assign ex_mem_d.instruction_valid = id_ex.instruction_valid;
+
     logic [31:0] alu_a;
     logic [31:0] alu_b;
     logic [31:0] alu_res;

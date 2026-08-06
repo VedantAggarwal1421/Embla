@@ -19,7 +19,12 @@ module csr_file (
     input  logic              pipeline_stall,
     output logic              trap_redirect_valid,
     output logic       [31:0] trap_redirect_pc,
-    output logic              csr_stall_if_id
+    output logic              csr_stall_if_id       //,
+
+    //Interrupts
+    //input logic msip_irq,
+    //input logic mtip_irq,
+    //input logic meip_irq
 );
 
     priv_lvl_t cur_priv_lvl, req_priv_lvl;
@@ -38,6 +43,10 @@ module csr_file (
     localparam ms_mpie = 7;  //M Status previous Interrupt Enable bit
     localparam ms_mpp_h = 12;  //M Status previous priv lvl msb
     localparam ms_mpp_l = 11;  //M Status previous priv lvl lsb
+
+    localparam msip = 3;
+    localparam mtip = 7;
+    localparam meip = 11;
 
 
     logic [31:0] mvendorid;
@@ -62,6 +71,20 @@ module csr_file (
     assign priv_check = cur_priv_lvl >= req_priv_lvl;
     assign read_allowed = priv_check && !trap_req && !ex_sys_instr;
     assign write_allowed = ~(&csr_src_addr[11:10]) && priv_check && !trap_req;
+
+    // always_comb begin
+    //     mip[msip] = msip_irq;
+    //     mip[mtip] = mtip_irq;
+    //     mip[meip] = meip_irq;
+    // end
+
+    // logic interrupt_pending = (mip[msip] && mie[msip]) || (mip[mtip] && mie[mtip]) || (mip[meip] && mie[meip]);
+    // logic [30:0] interrupt_cause;
+    // always_comb begin
+    //     if (mip[meip] && mie[meip]) interrupt_cause = INT_MACHINE_EXT;
+    //     else if (mip[msip] && mie[msip]) interrupt_cause = INT_MACHINE_SOFTWARE;
+    //     else if (mip[mtip] && mie[mtip]) interrupt_cause = INT_MACHINE_TIMER;
+    // end
 
     always_comb begin
         if (csr_read && read_allowed) begin
@@ -92,7 +115,7 @@ module csr_file (
         end else csr_src_data = 32'b0;
     end
 
-    assign csr_stall_if_id = csr_rd_we && (ex_sys_instr || trap_req);
+    assign csr_stall_if_id = csr_rd_we && (ex_sys_instr || trap_req  /*|| interrupt_pending*/);
 
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -102,6 +125,10 @@ module csr_file (
             mstatus[ms_mpp_h:ms_mpp_l] <= PRIV_M;
             trapped                    <= 1'b0;
             mtvec                      <= 32'h100;  //Temporary
+
+            //mie[msip]                  <= 1'b1;
+            //mie[mtip]                  <= 1'b1;
+            //mie[meip]                  <= 1'b1;
         end else if (csr_rd_we && write_allowed) begin
             case (csr_t'(csr_rd_addr))
                 MVENDORID: mvendorid <= csr_rd_data;
@@ -118,7 +145,7 @@ module csr_file (
                 MEPC:     mepc <= csr_rd_data;
                 MCAUSE:   mcause <= csr_rd_data;
                 MTVAL:    mtval <= csr_rd_data;
-                MIP:      mip <= csr_rd_data;
+                //MIP:      mip <= csr_rd_data;
 
                 MCYCLE:   mcycle <= {mcycle[63:32], csr_rd_data};
                 MINSTRET: minstret <= {minstret[63:32], csr_rd_data};
@@ -136,6 +163,15 @@ module csr_file (
             mstatus[ms_mie] <= 1'b0;
             mstatus[ms_mpie] <= mstatus[ms_mie];
             mstatus[ms_mpp_h:ms_mpp_l] <= cur_priv_lvl;
+            // end else if (interrupt_pending && mstatus[ms_mie] && !csr_stall_if_id && !pipeline_stall && !trapped) begin
+            //     //Take the interrupt
+            //     trapped <= 1'b1;
+            //     mcause <= {1'b1, interrupt_cause};
+            //     mstatus[ms_mie] <= 1'b0;
+            //     mstatus[ms_mpie] <= mstatus[ms_mie];
+            //     mstatus[ms_mpp_h:ms_mpp_l] <= cur_priv_lvl;
+            //     cur_priv_lvl <= PRIV_M;
+            //     mtval <= 32'b0;
         end else if (ex_sys_instr && !csr_stall_if_id && !pipeline_stall) begin
             if (sys_instr.is_mret) begin  //Return from trap
                 trapped <= 1'b0;

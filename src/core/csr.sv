@@ -19,7 +19,12 @@ module csr_unit (  //Manages the csr subsystem
     output logic       [31:0] trap_redirect_pc,
     output logic              csr_stall_if_id,
 
-    output logic [31:0] int_data_out
+    output logic [31:0] int_data_out  //,
+
+    //Interrupts
+    //input logic msip_irq,
+    //input logic mtip_irq,
+    //input logic meip_irq
 );
 
     logic        csr_instr_valid_q;
@@ -66,7 +71,12 @@ module csr_unit (  //Manages the csr subsystem
         .pipeline_stall(pipeline_stall),
         .trap_redirect_valid(trap_redirect_valid),
         .trap_redirect_pc(trap_redirect_pc),
-        .csr_stall_if_id(csr_stall_if_id)
+        .csr_stall_if_id(csr_stall_if_id)  //,
+
+        //Interrupts
+        //.msip_irq(msip_irq),
+        //.mtip_irq(mtip_irq),
+        //.meip_irq(meip_irq)
     );
 
     //Operation

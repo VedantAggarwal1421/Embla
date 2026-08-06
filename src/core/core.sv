@@ -23,6 +23,11 @@ module core (
     input  logic        lsu_wdata_ready,  // Write completed
     input  logic [31:0] lsu_rdata,        // Data memory read data
     input  logic        lsu_rdata_ready   // Data is ready to be read
+
+    //Interrupts
+    //input logic msip_irq,
+    //input logic mtip_irq,
+    //input logic meip_irq
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
@@ -51,10 +56,10 @@ module core (
     forward_sel_t        branch_b_sel;
     logic                branch_flush;
     //Buffering Branch Flush to account for synchronous mem.
-    logic                br_flush_buff;
-    always_ff @(posedge clk) begin
-        if (!pipeline_stall) br_flush_buff <= branch_flush;
-    end
+    //logic                br_flush_buff;
+    // always_ff @(posedge clk) begin
+    //     if (!pipeline_stall) br_flush_buff <= branch_flush;
+    // end
 
     csr_in_data_t        csr_in_data;
     logic         [31:0] csr_out_data;
@@ -64,10 +69,10 @@ module core (
     logic         [31:0] trap_redirect_pc;
     logic                csr_stall_if_id;
     logic                trap_flush;
-    logic                trap_flush_buff;  //Buffer for same reason as branch.
-    always_ff @(posedge clk) begin
-        if (!pipeline_stall) trap_flush_buff <= trap_flush;
-    end
+    //logic                trap_flush_buff;  //Buffer for same reason as branch.
+    // always_ff @(posedge clk) begin
+    //     if (!pipeline_stall) trap_flush_buff <= trap_flush;
+    // end
     assign trap_flush = trap_redirect_valid;
 
 
@@ -87,6 +92,9 @@ module core (
         end
     end
 
+    logic if_id_en;
+    assign if_id_en = !pipeline_stall && !stall.if_id && !csr_stall_if_id;
+
     instruction_fetch if_inst (
         .clk              (clk),
         .rst              (rst),
@@ -95,6 +103,7 @@ module core (
         .if_data          (if_data),
         .if_data_valid    (if_data_valid),
         .if_stall         (pipeline_stall || stall.if_id || csr_stall_if_id),
+        .if_id_en         (if_id_en),
         .instruction_valid(if_id_d.instruction_valid),
         .instruction      (if_id_d.instruction),
         .instruction_pc   (if_id_d.pc),
@@ -104,7 +113,7 @@ module core (
     );
 
     logic if_id_flush;
-    assign if_id_flush = (|{branch_flush, br_flush_buff, trap_flush, trap_flush_buff}) && !pipeline_stall;
+    assign if_id_flush = (|{branch_flush, /*br_flush_buff,*/ trap_flush/*, trap_flush_buff*/}) && !pipeline_stall;
     localparam nop_instr = 32'h00000013;
 
     //IF/ID Pipeline Register
@@ -118,9 +127,12 @@ module core (
             if_id_q.pc                <= if_id_d.pc;
             if_id_q.instruction       <= nop_instr;
             if_id_q.pc_4              <= if_id_d.pc_4;
-        end else if (!pipeline_stall && !stall.if_id && !csr_stall_if_id) begin
+        end else if (if_id_en && if_id_d.instruction_valid) begin
             if_id_q <= if_id_d;
             //$display("Instruction : %h, PC: %h, Time: %0t", if_id_d.instruction, if_id_d.pc, $time);
+        end else if (if_id_en) begin
+            if_id_q.instruction_valid <= 1'b0;
+            if_id_q.instruction       <= nop_instr;
         end
     end
 
@@ -330,6 +342,11 @@ module core (
         .trap_redirect_pc(trap_redirect_pc),
         .csr_stall_if_id(csr_stall_if_id),
         .int_data_out(csr_out_data)
+
+        //Interrupts
+        //.msip_irq(msip_irq),
+        //.mtip_irq(mtip_irq),
+        //.meip_irq(meip_irq)
     );
 
 endmodule

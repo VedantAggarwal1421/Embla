@@ -150,8 +150,21 @@ package core_pkg;
         EXP_ECALL_M            = 31'd11,
         EXP_INSTR_PG_FAULT     = 31'd12,
         EXP_LOAD_PG_FAULT      = 31'd13,
-        EXP_STR_PG_FAULT       = 31'd15
+        EXP_STR_PG_FAULT       = 31'd15,
+        EXP_DOUBLE_TRAP        = 31'd16,
+        EXP_SOFTWARE_CHK       = 31'd18,
+        EXP_HARDWARE_ERR       = 31'd19
     } exception_cause_t;
+
+    typedef enum logic [30:0] {
+        INT_SUPERVISOR_SOFTWARE = 31'd1,
+        INT_MACHINE_SOFTWARE    = 31'd3,
+        INT_SUPERVISOR_TIMER    = 31'd5,
+        INT_MACHINE_TIMER       = 31'd7,
+        INT_SUPERVISOR_EXT      = 31'd9,
+        INT_MACHINE_EXT         = 31'd11,
+        INT_COUNTER_OVERFLOW    = 31'd13
+    } interrupt_cause_t;
 
     typedef struct packed {
         logic             valid;
@@ -222,6 +235,7 @@ package core_pkg;
         logic [31:0]  rs1_data;
         logic [31:0]  rs2_data;
         logic [31:0]  immediate;
+        logic         instruction_valid;
         logic [31:0]  pc;
         logic [31:0]  pc_4;
         //Control - RV32I
@@ -245,6 +259,7 @@ package core_pkg;
 
     typedef struct packed {
         //Data
+        logic         instruction_valid;
         logic [31:0]  alu_res;
         mem_in_data_t mem_in_data;
         //Control
@@ -258,6 +273,7 @@ package core_pkg;
     } ex_mem_t;
 
     typedef struct packed {
+        logic        instruction_valid;
         logic [31:0] alu_res;
         logic [31:0] mem_rdata;
         logic        reg_write;

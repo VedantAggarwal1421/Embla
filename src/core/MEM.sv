@@ -12,6 +12,7 @@ module memory_access (
     input ex_mem_t ex_mem,
     output mem_wb_t mem_wb_d
 );
+    assign mem_wb_d.instruction_valid = ex_mem.instruction_valid;
     assign mem_stall = (ex_mem.mem_read && ~mem_rdata_ready) || (ex_mem.mem_write && ~mem_wdata_ready);
     assign mem_wb_d.alu_res = ex_mem.alu_res;
     assign mem_wb_d.mem_rdata = format_load(mem_rdata, ex_mem.load_type, ex_mem.alu_res[1:0]);
