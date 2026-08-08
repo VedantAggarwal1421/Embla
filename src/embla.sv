@@ -1,14 +1,15 @@
 // Top module for the Embla SoC. This module instantiates the core and other subsystems.
 `timescale 1ns / 1ns
 module embla (
-    input wire sys_clk,  // System clock
-    input wire sys_rst,  // Active high reset - Hard reset for the entire soc
-    input wire s2,  // Button 2 of fpga. Debugging purposes.  
-    output wire uart_tx,  // UART transmit
-    output wire led,  // Represents the slowed down clock. Debugging purposes
-    output wire led2,  // Preserves Debug output
-    output wire [3:0] debug_led,
-    input wire uart_rx,  // UART receive
+    input  logic       sys_clk,         // System clock
+    input  logic       sys_rst,         // Active high reset - Hard reset for the entire soc
+    input  logic       s2,              // Button 2 of fpga. Debugging purposes.  
+    output logic       uart_tx,         // UART transmit
+    output logic       led,             // Represents the slowed down clock. Debugging purposes
+    output logic       led2,            // Preserves Debug output
+    output logic [3:0] debug_led,
+    input  logic       interrupt_test,
+    input  logic       uart_rx,         // UART receive
 
     //Interface to sdram
     output logic        O_sdram_clk,    // Sdram Clock
@@ -100,6 +101,11 @@ module embla (
     logic        uart_busy;
     logic        uart_en;
 
+    logic        msip_irq;
+    logic        mtip_irq;
+    logic        meip_irq;
+    assign mtip_irq = interrupt_test;
+
     core core_inst (
         .clk(clk),
         .rst(rst),
@@ -122,7 +128,11 @@ module embla (
         .lsu_size(lsu_size),
         .lsu_wdata_ready(lsu_wdata_ready),
         .lsu_rdata(lsu_rdata),
-        .lsu_rdata_ready(lsu_rdata_ready)
+        .lsu_rdata_ready(lsu_rdata_ready),
+
+        .msip_irq(msip_irq),
+        .mtip_irq(mtip_irq),
+        .meip_irq(meip_irq)
     );
 
     //Memories

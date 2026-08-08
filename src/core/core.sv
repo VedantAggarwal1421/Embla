@@ -22,12 +22,12 @@ module core (
     output logic [ 1:0] lsu_size,         // Data memory size (00=byte, 01=halfword, 10=word)
     input  logic        lsu_wdata_ready,  // Write completed
     input  logic [31:0] lsu_rdata,        // Data memory read data
-    input  logic        lsu_rdata_ready   // Data is ready to be read
+    input  logic        lsu_rdata_ready,  // Data is ready to be read
 
     //Interrupts
-    //input logic msip_irq,
-    //input logic mtip_irq,
-    //input logic meip_irq
+    input logic msip_irq,
+    input logic mtip_irq,
+    input logic meip_irq
 );
     // Instruction Fetch -> Instruction Decode -> Execute -> Memory Access -> Write Back
 
@@ -55,11 +55,6 @@ module core (
     forward_sel_t        branch_a_sel;
     forward_sel_t        branch_b_sel;
     logic                branch_flush;
-    //Buffering Branch Flush to account for synchronous mem.
-    //logic                br_flush_buff;
-    // always_ff @(posedge clk) begin
-    //     if (!pipeline_stall) br_flush_buff <= branch_flush;
-    // end
 
     csr_in_data_t        csr_in_data;
     logic         [31:0] csr_out_data;
@@ -69,15 +64,17 @@ module core (
     logic         [31:0] trap_redirect_pc;
     logic                csr_stall_if_id;
     logic                trap_flush;
-    //logic                trap_flush_buff;  //Buffer for same reason as branch.
-    // always_ff @(posedge clk) begin
-    //     if (!pipeline_stall) trap_flush_buff <= trap_flush;
-    // end
     assign trap_flush = trap_redirect_valid;
 
+    logic          pipeline_clear;
+    logic          drain_pipeline;
+    logic   [31:0] drain_next_pc;  //Pc to continue from after draining pipeline
+    logic          if_settled;
+    logic   [31:0] if_next_fetch;
 
-    if_id_t if_id_d;
-    if_id_t if_id_q;
+
+    if_id_t        if_id_d;
+    if_id_t        if_id_q;
 
     always_comb begin
         if (trap_redirect_valid) begin
@@ -102,14 +99,16 @@ module core (
         .if_req_valid     (if_req_valid),
         .if_data          (if_data),
         .if_data_valid    (if_data_valid),
-        .if_stall         (pipeline_stall || stall.if_id || csr_stall_if_id),
+        .if_stall         (pipeline_stall || stall.if_id || csr_stall_if_id || drain_pipeline),
         .if_id_en         (if_id_en),
         .instruction_valid(if_id_d.instruction_valid),
         .instruction      (if_id_d.instruction),
         .instruction_pc   (if_id_d.pc),
         .instruction_pc_4 (if_id_d.pc_4),
         .redirect_valid   (redirect_valid),
-        .redirect_pc      (redirect_pc)
+        .redirect_pc      (redirect_pc),
+        .settled          (if_settled),
+        .next_fetch       (if_next_fetch)
     );
 
     logic if_id_flush;
@@ -122,8 +121,8 @@ module core (
         if (rst) begin
             if_id_q <= '0;
             //debug_uart <= '0;
-        end else if (if_id_flush) begin
-            if_id_q.instruction_valid <= if_id_d.instruction_valid;
+        end else if (if_id_flush || drain_pipeline) begin
+            if_id_q.instruction_valid <= 1'b0;
             if_id_q.pc                <= if_id_d.pc;
             if_id_q.instruction       <= nop_instr;
             if_id_q.pc_4              <= if_id_d.pc_4;
@@ -198,7 +197,7 @@ module core (
         if (rst) begin
             id_ex_q <= '0;
             //debug_uart <= '0;
-        end else if ((flush.id_ex || trap_flush) && !pipeline_stall) begin
+        end else if ((flush.id_ex || trap_flush || drain_pipeline) && !pipeline_stall) begin
             id_ex_q <= '0;
         end else if (!pipeline_stall) begin
             id_ex_q <= id_ex_d;
@@ -289,6 +288,24 @@ module core (
         .rd_we(rd_we)
     );
 
+    logic drain_next_pc_set;
+    assign pipeline_clear = ~(if_id_d.instruction_valid | if_id_q.instruction_valid | id_ex_q.instruction_valid | ex_mem_q.instruction_valid | mem_wb_q.instruction_valid | (~if_settled));
+
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            drain_next_pc_set <= 1'b0;
+            drain_next_pc <= 32'd0;
+        end else if (drain_pipeline && ~drain_next_pc_set) begin
+            if (if_id_q.instruction_valid) drain_next_pc <= if_id_q.pc;
+            else if (if_id_d.instruction_valid) drain_next_pc <= if_id_d.pc;
+            else drain_next_pc <= if_next_fetch;
+
+            drain_next_pc_set <= 1'b1;
+        end else if (!drain_pipeline) begin
+            drain_next_pc_set <= 1'b0;
+        end
+    end
+
     //Hazard Unit
     hazard_unit hazard_inst (
         .mem_rd_addr(ex_mem_q.rd_addr),
@@ -341,12 +358,16 @@ module core (
         .trap_redirect_valid(trap_redirect_valid),
         .trap_redirect_pc(trap_redirect_pc),
         .csr_stall_if_id(csr_stall_if_id),
-        .int_data_out(csr_out_data)
+        .int_data_out(csr_out_data),
 
         //Interrupts
-        //.msip_irq(msip_irq),
-        //.mtip_irq(mtip_irq),
-        //.meip_irq(meip_irq)
+        .msip_irq(msip_irq),
+        .mtip_irq(mtip_irq),
+        .meip_irq(meip_irq),
+
+        .drain_pipeline(drain_pipeline),
+        .drain_next_pc (drain_next_pc),
+        .pipeline_clear(pipeline_clear)
     );
 
 endmodule

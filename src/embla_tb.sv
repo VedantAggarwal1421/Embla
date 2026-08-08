@@ -9,6 +9,7 @@ module embla_tb;
     logic led;
     logic led2;
     logic s2;
+    logic interrupt_test;
 
     initial begin
         clk = 0;
@@ -25,7 +26,8 @@ module embla_tb;
         .uart_rx(uart_rx),
         .led(led),
         .led2(led2),
-        .s2(s2)
+        .s2(s2),
+        .interrupt_test(interrupt_test)
     );
 
     initial begin
@@ -36,6 +38,7 @@ module embla_tb;
         rst = 1;
         #20;
         rst = 0;
+        #260 interrupt_test = 1;
 
         // Wait for some time to observe the behavior
         #3000;

@@ -17,7 +17,11 @@ module instruction_fetch (
 
     //Branching
     input logic        redirect_valid,
-    input logic [31:0] redirect_pc
+    input logic [31:0] redirect_pc,
+
+    //State info
+    output logic        settled,
+    output logic [31:0] next_fetch
 );
 
     logic [31:0] outstanding_pc;
@@ -46,6 +50,24 @@ module instruction_fetch (
 
     if_state_t if_state;
 
+    assign settled = if_stall && (if_state != IF_RESP);
+    always_comb begin
+        case (if_state)
+            IF_IDLE: begin
+                if (redirect_valid || redirect_req_pending)
+                    next_fetch = redirect_valid ? redirect_pc : redirect_req_pc;
+                else next_fetch = outstanding_pc_4;
+            end
+            IF_REQ: begin
+                if (redirect_valid || redirect_req_pending)
+                    next_fetch = redirect_valid ? redirect_pc : redirect_req_pc;
+                else next_fetch = request_pc;
+            end
+            default: next_fetch = outstanding_pc_4;
+        endcase
+    end
+
+
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             if_state       <= IF_REQ;
@@ -58,7 +80,6 @@ module instruction_fetch (
                         instruction_valid <= 1'b0;
                         if (redirect_valid || redirect_req_pending) begin
                             request_pc <= redirect_valid ? redirect_pc : redirect_req_pc;
-                            redirect_serviced <= 1'b1;
                         end else request_pc <= outstanding_pc_4;
                         if_state <= IF_REQ;
                     end else if (if_id_en) begin
@@ -70,16 +91,23 @@ module instruction_fetch (
                     if (!if_stall) begin
                         instruction_valid <= 1'b0;
                         if_req_valid      <= 1'b1;
-                        if_addr           <= request_pc;
-                        outstanding_pc    <= request_pc;
-                        if_state          <= IF_RESP;
+                        if (redirect_valid || redirect_req_pending) begin
+                            if_addr           <= redirect_valid ? redirect_pc : redirect_req_pc;
+                            outstanding_pc    <= redirect_valid ? redirect_pc : redirect_req_pc;
+                            redirect_serviced <= 1'b1;
+                        end else begin
+                            if_addr        <= request_pc;
+                            outstanding_pc <= request_pc;
+                        end
+                        if_state <= IF_RESP;
                     end else if (if_id_en) begin
                         instruction_valid <= 1'b0;
                     end
                 end
                 IF_RESP: begin
                     if_req_valid <= 1'b0;
-                    if (if_data_valid && !(redirect_req_pending || redirect_valid)) begin  //Response for outstanding pc. Dicard if we need to branch
+                    redirect_serviced <= 1'b0;
+                    if (if_data_valid && !((redirect_req_pending&&(~redirect_serviced)) || redirect_valid)) begin  //Response for outstanding pc. Dicard if we need to branch
 
                         instruction_valid <= 1'b1;
                         instruction       <= if_data;
@@ -89,9 +117,7 @@ module instruction_fetch (
                         if_state          <= (if_stall) ? IF_IDLE : IF_REQ;
 
                     end else if (if_data_valid) begin  //Redirect active
-                        if_state          <= IF_REQ;
-                        request_pc        <= (redirect_valid) ? redirect_pc : redirect_req_pc;
-                        redirect_serviced <= 1'b1;
+                        if_state <= IF_REQ;
                     end else begin
                         if_state <= IF_RESP;
                     end
