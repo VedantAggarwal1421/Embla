@@ -1,0 +1,20 @@
+TODO:
+
+Peripherals:
+Uart 16550
+PLIC
+Timers
+Flash Controller
+
+Core:
+Interrupts with exceptions
+finish M mode
+S mode , U mode
+
+Memory:
+Hook up instruction memory to sdram
+mmu - later
+caches - later
+
+Other:
+Bootloader

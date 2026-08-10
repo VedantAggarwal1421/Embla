@@ -5,54 +5,141 @@
 
 _start:
 
-    # ---------------------------------------------------------------
-    # Enable machine timer interrupt
-    # ---------------------------------------------------------------
+    # ===============================================================
+    # Enable Machine Timer Interrupt
+    # ===============================================================
 
-    li      t0, 0x80          # MTIE = bit 7 in mie
+    li      t0, 0x80              # MTIE
     csrs    mie, t0
 
-    # Enable global machine interrupts
-    li      t0, 0x8           # MIE = bit 3 in mstatus
+    li      t0, 0x8               # MIE
     csrs    mstatus, t0
 
 
-    # ---------------------------------------------------------------
-    # Normal program
+    # ===============================================================
+    # Basic arithmetic
+    # ===============================================================
+
+    li      x1, 10
+    li      x2, 20
+
+    add     x3, x1, x2            # x3 = 30
+    sub     x4, x2, x1            # x4 = 10
+
+    addi    x5, x3, 5             # x5 = 35
+    addi    x6, x4, -3            # x6 = 7
+
+
+    # ===============================================================
+    # Forwarding / dependency chain
+    # ===============================================================
+
+    add     x7, x5, x6            # x7 = 42
+    addi    x7, x7, 1             # x7 = 43
+    addi    x7, x7, 1             # x7 = 44
+
+
+    # ===============================================================
+    # Branch taken
+    # ===============================================================
+
+    li      x8, 1
+    li      x9, 1
+
+    beq     x8, x9, branch_taken
+
+    # Should NOT execute
+    li      x10, 0xdead
+
+
+branch_taken:
+
+    li      x10, 100
+    addi    x10, x10, 23          # x10 = 123
+
+
+    # ===============================================================
+    # Branch NOT taken
+    # ===============================================================
+
+    li      x11, 5
+    li      x12, 10
+
+    beq     x11, x12, branch_not_taken
+
+    # This SHOULD execute
+    addi    x13, x0, 55
+
+
+branch_not_taken:
+
+    # ===============================================================
+    # Another branch with arithmetic around it
+    # ===============================================================
+
+    li      x14, 3
+    li      x15, 3
+
+    bne     x14, x15, should_not_branch
+
+    addi    x16, x0, 77           # Should execute
+
+should_not_branch:
+
+
+    # ===============================================================
+    # Known interrupt boundary
     #
-    # Assert MTIP from the testbench somewhere while these execute.
-    # ---------------------------------------------------------------
+    # ASSERT MTIP HERE FROM THE TESTBENCH.
+    #
+    # At this point all instructions above should have committed.
+    # ===============================================================
 
-before_interrupt:
+interrupt_boundary:
 
-    addi    x1, x1, 1
-    addi    x1, x1, 1
-    addi    x1, x1, 1
-    addi    x1, x1, 1
+    addi    x17, x0, 111
+    addi    x18, x0, 222
+    addi    x19, x0, 333
 
-interrupt_point:
+    add     x20, x17, x18         # 333
+    add     x20, x20, x19         # 666
 
-    addi    x2, x2, 10        # <-- interrupt should happen around here
 
-    addi    x2, x2, 20
-    addi    x2, x2, 30
-    addi    x2, x2, 40
+    # ===============================================================
+    # More control flow after the interrupt
+    #
+    # This proves that execution didn't merely return to the
+    # right general area, but continued normally.
+    # ===============================================================
 
-after_interrupt:
+    li      x21, 0
 
-    # ---------------------------------------------------------------
-    # If interrupt handling is correct, execution eventually reaches
-    # here after mret.
-    # ---------------------------------------------------------------
+    beq     x20, x20, post_int_branch
 
-    li      x3, 0x12345678
+    # Should NOT execute
+    li      x21, 0xdead
+
+
+post_int_branch:
+
+    addi    x21, x21, 10
+    addi    x21, x21, 20
+    addi    x21, x21, 30           # x21 = 60
+
+
+    # ===============================================================
+    # Final marker
+    # ===============================================================
+
+    li      x22, 0x12345678
 
 done:
     j       done
 
 
+
     # ===============================================================
-    # Machine interrupt handler
+    # MACHINE INTERRUPT HANDLER
     #
     # mtvec = 0x100
     # ===============================================================
@@ -61,14 +148,23 @@ done:
 
 trap_handler:
 
-    # Just do some harmless work.
-    # We deliberately DON'T modify mepc.
+    # ---------------------------------------------------------------
+    # Deliberately use registers that already contain values.
+    # This is okay for this test because we don't care about
+    # preserving them yet.
+    # ---------------------------------------------------------------
 
     addi    t0, t0, 1
     addi    t1, t1, 2
     addi    t2, t2, 3
     addi    t3, t3, 4
 
-    # Return to interrupted program
+    # Some arithmetic
+    add     t4, t0, t1
+    sub     t5, t4, t2
+
+    # DO NOT modify mepc.
+    # We want to test that mret returns to the address saved
+    # automatically during interrupt entry.
 
     mret
