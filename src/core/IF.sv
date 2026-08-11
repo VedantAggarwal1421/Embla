@@ -70,9 +70,13 @@ module instruction_fetch (
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            if_state       <= IF_REQ;
-            outstanding_pc <= 32'd0;
-            request_pc     <= 32'd0;
+            if_state          <= IF_REQ;
+            instruction_valid <= 1'b0;
+            instruction       <= 32'b0;
+            instruction_pc    <= 32'b0;
+            instruction_pc_4  <= 32'b0;
+            outstanding_pc    <= 32'd0;
+            request_pc        <= 32'd0;
         end else begin
             case (if_state)
                 IF_IDLE: begin

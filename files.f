@@ -24,5 +24,5 @@ src/memory/imem.sv
 src/memory/dmem.sv
 src/memory/load_store_unit.sv
 src/memory/sdram_controller_sim.sv
-src/uart/uart_driver.sv
+src/uart/uart_driver_sim.sv
 src/uart/uart_tx.sv
